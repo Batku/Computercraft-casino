@@ -70,23 +70,40 @@ local function drawCard()
     return CARDS[math.random(1, #CARDS)]
 end
 
--- Draw hand on monitor
+-- Draw a hand of cards
 local function drawHand(monitor, hand, x, y, label, hideFirst)
     monitor.setCursorPos(x, y)
+    monitor.setBackgroundColor(colors.black)
     monitor.setTextColor(colors.white)
     monitor.write(label .. ":")
     
     monitor.setCursorPos(x, y + 1)
     for i, card in ipairs(hand) do
         if hideFirst and i == 1 then
-            monitor.write("[?] ")
+            -- Hidden card (face down)
+            ui.drawBox(monitor, x + ((i - 1) * 4), y + 1, 3, 3, colors.blue, colors.white)
+            monitor.setCursorPos(x + ((i - 1) * 4) + 1, y + 2)
+            monitor.setBackgroundColor(colors.blue)
+            monitor.write("?")
         else
-            monitor.write("[" .. card.name .. "] ")
+            -- Visible card with suit colors
+            local cardColor = colors.white
+            if card.suit == "♥" or card.suit == "♦" then
+                cardColor = colors.red
+            end
+            
+            ui.drawBox(monitor, x + ((i - 1) * 4), y + 1, 3, 3, cardColor, colors.black)
+            monitor.setCursorPos(x + ((i - 1) * 4), y + 2)
+            monitor.setBackgroundColor(cardColor)
+            monitor.setTextColor(colors.black)
+            monitor.write(card.name .. card.suit)
         end
     end
     
     if not hideFirst then
-        monitor.setCursorPos(x, y + 2)
+        monitor.setCursorPos(x, y + 4)
+        monitor.setBackgroundColor(colors.black)
+        monitor.setTextColor(colors.lime)
         monitor.write("Total: " .. calculateHand(hand))
     end
 end
@@ -98,37 +115,39 @@ local function drawGameUI(monitor, playerHand, dealerHand, bet, balance, message
     
     local w, h = monitor.getSize()
     
-    -- Title
+    -- Title and info
     ui.drawCenteredText(monitor, 1, "BLACKJACK", colors.black, colors.yellow)
     
-    -- Dealer hand
-    drawHand(monitor, dealerHand, 2, 3, "Dealer", hideDealer)
-    
-    -- Player hand
-    drawHand(monitor, playerHand, 2, 6, "Player", false)
-    
-    -- Bet and balance
-    monitor.setCursorPos(2, 9)
+    monitor.setCursorPos(2, 2)
     monitor.setTextColor(colors.lime)
     monitor.write("Bet: " .. ui.formatNumber(bet))
-    monitor.setCursorPos(2, 10)
-    monitor.write("Balance: " .. ui.formatNumber(balance))
+    
+    monitor.setCursorPos(w - #("Bal: " .. ui.formatNumber(balance)) - 1, 2)
+    monitor.write("Bal: " .. ui.formatNumber(balance))
+    
+    -- Dealer hand (centered)
+    local dealerX = math.floor((w - (#dealerHand * 4)) / 2)
+    drawHand(monitor, dealerHand, dealerX, 4, "Dealer", hideDealer)
+    
+    -- Player hand (centered)
+    local playerX = math.floor((w - (#playerHand * 4)) / 2)
+    drawHand(monitor, playerHand, playerX, 9, "Player", false)
     
     -- Message
     if message then
-        ui.drawCenteredText(monitor, h - 3, message, colors.black, colors.orange)
+        ui.drawCenteredText(monitor, h - 4, message, colors.black, colors.orange)
     end
     
     -- Buttons
     if showButtons then
         if showButtons.hit then
-            ui.drawButton(monitor, 2, h - 1, 8, 1, "HIT", colors.green, colors.white)
+            ui.drawButton(monitor, 3, h - 2, 8, 2, "HIT", colors.green, colors.white)
         end
         if showButtons.stand then
-            ui.drawButton(monitor, 11, h - 1, 8, 1, "STAND", colors.red, colors.white)
+            ui.drawButton(monitor, 13, h - 2, 8, 2, "STAND", colors.red, colors.white)
         end
         if showButtons.quit then
-            ui.drawButton(monitor, w - 9, h - 1, 8, 1, "QUIT", colors.gray, colors.white)
+            ui.drawButton(monitor, w - 10, h - 2, 8, 2, "QUIT", colors.gray, colors.white)
         end
     end
 end
@@ -142,21 +161,30 @@ local function drawBettingUI(monitor, balance, currentBet)
     
     ui.drawCenteredText(monitor, 1, "BLACKJACK", colors.black, colors.yellow)
     
-    ui.drawCenteredText(monitor, 4, "Place Your Bet", colors.black, colors.white)
-    ui.drawCenteredText(monitor, 5, "Current: " .. ui.formatNumber(currentBet), colors.black, colors.lime)
-    ui.drawCenteredText(monitor, 7, "Balance: " .. ui.formatNumber(balance), colors.black, colors.white)
+    ui.drawCenteredText(monitor, 3, "Place Your Bet", colors.black, colors.white)
     
-    -- Bet buttons
-    ui.drawButton(monitor, 2, 9, 6, 1, "+1", colors.green, colors.white)
-    ui.drawButton(monitor, 9, 9, 6, 1, "+10", colors.green, colors.white)
-    ui.drawButton(monitor, 16, 9, 6, 1, "+100", colors.green, colors.white)
+    -- Big bet display
+    ui.drawBox(monitor, 6, 5, 14, 3, colors.gray, colors.white)
+    ui.drawCenteredText(monitor, 6, ui.formatNumber(currentBet), colors.gray, colors.lime)
     
-    ui.drawButton(monitor, 2, 11, 6, 1, "-1", colors.red, colors.white)
-    ui.drawButton(monitor, 9, 11, 6, 1, "-10", colors.red, colors.white)
-    ui.drawButton(monitor, 16, 11, 6, 1, "-100", colors.red, colors.white)
+    ui.drawCenteredText(monitor, 8, "Balance: " .. ui.formatNumber(balance), colors.black, colors.white)
+    ui.drawCenteredText(monitor, 9, "Min: " .. MIN_BET .. "  Max: " .. MAX_BET, colors.black, colors.gray)
     
-    ui.drawButton(monitor, 2, h - 1, 10, 1, "DEAL", colors.blue, colors.white)
-    ui.drawButton(monitor, w - 11, h - 1, 10, 1, "QUIT", colors.gray, colors.white)
+    -- Bet buttons (bigger and centered)
+    local btnW = 6
+    local startX = math.floor((w - (btnW * 3 + 2)) / 2)
+    
+    ui.drawButton(monitor, startX, 11, btnW, 2, "+1", colors.green, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, 11, btnW, 2, "+10", colors.green, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, 11, btnW, 2, "+100", colors.green, colors.white)
+    
+    ui.drawButton(monitor, startX, 14, btnW, 2, "-1", colors.red, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, 14, btnW, 2, "-10", colors.red, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, 14, btnW, 2, "-100", colors.red, colors.white)
+    
+    -- Action buttons
+    ui.drawButton(monitor, 3, h - 2, 8, 2, "DEAL", colors.blue, colors.white)
+    ui.drawButton(monitor, w - 10, h - 2, 8, 2, "QUIT", colors.gray, colors.white)
 end
 
 -- Send win/loss notification
@@ -213,30 +241,32 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
             local event, side, x, y = os.pullEvent("monitor_touch")
             
             local w, h = monitor.getSize()
+            local btnW = 6
+            local startX = math.floor((w - (btnW * 3 + 2)) / 2)
             
             -- Bet adjustment buttons
-            if ui.inBounds(x, y, 2, 9, 6, 1) then
+            if ui.inBounds(x, y, startX, 11, btnW, 2) then
                 currentBet = math.min(currentBet + 1, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 9, 9, 6, 1) then
+            elseif ui.inBounds(x, y, startX + btnW + 1, 11, btnW, 2) then
                 currentBet = math.min(currentBet + 10, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 16, 9, 6, 1) then
+            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, 11, btnW, 2) then
                 currentBet = math.min(currentBet + 100, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 2, 11, 6, 1) then
+            elseif ui.inBounds(x, y, startX, 14, btnW, 2) then
                 currentBet = math.max(currentBet - 1, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 9, 11, 6, 1) then
+            elseif ui.inBounds(x, y, startX + btnW + 1, 14, btnW, 2) then
                 currentBet = math.max(currentBet - 10, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 16, 11, 6, 1) then
+            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, 14, btnW, 2) then
                 currentBet = math.max(currentBet - 100, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 2, h - 1, 10, 1) then
+            elseif ui.inBounds(x, y, 3, h - 2, 8, 2) then
                 -- Deal
                 betting = false
-            elseif ui.inBounds(x, y, w - 11, h - 1, 10, 1) then
+            elseif ui.inBounds(x, y, w - 10, h - 2, 8, 2) then
                 -- Quit
                 return balance
             end
