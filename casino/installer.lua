@@ -58,6 +58,7 @@ end
 local function installCashier()
     print("Installing Cashier...")
     installCommon()
+    download(GITHUB_RAW .. "lib/ui.lua", "/casino/lib/ui.lua")
     download(GITHUB_RAW .. "cashier/cashier.lua", "/casino/cashier/cashier.lua")
     
     print("\n=== Installation Complete ===")
