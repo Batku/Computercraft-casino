@@ -10,33 +10,33 @@ local MAX_BET = 100
 -- Symbols with weights (lower weight = rarer)
 -- Designed for ~99% RTP
 local SYMBOLS = {
-    {name = "7", display = "7", weight = 1},    -- Rarest
-    {name = "Diamond", display = "D", weight = 2},
-    {name = "Bell", display = "B", weight = 4},
-    {name = "Cherry", display = "C", weight = 8},
-    {name = "Lemon", display = "L", weight = 12},
-    {name = "Orange", display = "O", weight = 15},
-    {name = "Plum", display = "P", weight = 18}
+    {name = "7", display = string.char(7), weight = 1},      -- Bell symbol (rarest)
+    {name = "Diamond", display = string.char(4), weight = 2}, -- Diamond ♦
+    {name = "Bell", display = string.char(11), weight = 4},   -- Male symbol ♂
+    {name = "Cherry", display = string.char(3), weight = 8},  -- Heart ♥
+    {name = "Lemon", display = string.char(15), weight = 12}, -- Sun ☼
+    {name = "Orange", display = string.char(9), weight = 15}, -- Circle ○
+    {name = "Plum", display = string.char(6), weight = 18}    -- Spade ♠
 }
 
 -- Payout table (multipliers)
 local PAYOUTS = {
     -- Three of a kind
     ["7-7-7"] = 500,
-    ["D-D-D"] = 100,
-    ["B-B-B"] = 50,
-    ["C-C-C"] = 25,
-    ["L-L-L"] = 15,
-    ["O-O-O"] = 10,
-    ["P-P-P"] = 5,
+    ["Diamond-Diamond-Diamond"] = 100,
+    ["Bell-Bell-Bell"] = 50,
+    ["Cherry-Cherry-Cherry"] = 25,
+    ["Lemon-Lemon-Lemon"] = 15,
+    ["Orange-Orange-Orange"] = 10,
+    ["Plum-Plum-Plum"] = 5,
     
     -- Two cherries (any position)
-    ["C-C-*"] = 3,
-    ["C-*-C"] = 3,
-    ["*-C-C"] = 3,
+    ["Cherry-Cherry-*"] = 3,
+    ["Cherry-*-Cherry"] = 3,
+    ["*-Cherry-Cherry"] = 3,
     
     -- One cherry in first reel
-    ["C-*-*"] = 2
+    ["Cherry-*-*"] = 2
 }
 
 -- Initialize peripherals
