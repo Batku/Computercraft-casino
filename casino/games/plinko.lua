@@ -58,7 +58,7 @@ local function dropBall(speaker)
 end
 
 -- Draw plinko board
-local function drawBoard(monitor, path, currentRow, showResult, slot, multiplier)
+local function drawBoard(monitor, bet, balance, path, currentRow, showResult, slot, multiplier, payout)
     monitor.setBackgroundColor(colors.black)
     monitor.clear()
     
@@ -67,55 +67,99 @@ local function drawBoard(monitor, path, currentRow, showResult, slot, multiplier
     -- Title
     ui.drawCenteredText(monitor, 1, "PLINKO", colors.black, colors.yellow)
     
-    -- Draw simplified board (due to monitor size constraints)
-    -- We'll show a small representation
+    -- Bet and balance at top
+    monitor.setCursorPos(2, 2)
+    monitor.setTextColor(colors.lime)
+    monitor.write("Bet: " .. ui.formatNumber(bet))
+    
+    monitor.setCursorPos(w - #("Bal: " .. ui.formatNumber(balance)) - 1, 2)
+    monitor.write("Bal: " .. ui.formatNumber(balance))
+    
+    -- Draw board visualization in center
+    local boardStartY = 4
+    local boardHeight = 6
     
     if currentRow and currentRow > 0 then
-        -- Show ball position
-        local displayRow = math.floor((currentRow / ROWS) * 8) + 2
-        local displayPos = math.floor(((path[currentRow].position - 0.5) / 17) * 20) + 3
+        -- Show ball dropping with trail
+        local displayRow = math.floor((currentRow / ROWS) * boardHeight) + boardStartY
+        local displayPos = math.floor(((path[currentRow].position - 0.5) / 17) * (w - 4)) + 3
         
+        -- Draw the ball
         monitor.setCursorPos(displayPos, displayRow)
-        monitor.setTextColor(colors.yellow)
+        monitor.setBackgroundColor(colors.yellow)
+        monitor.setTextColor(colors.black)
         monitor.write("O")
+        monitor.setBackgroundColor(colors.black)
+        
+        -- Draw pegs
+        for row = boardStartY, boardStartY + boardHeight do
+            for i = 1, 10 do
+                local pegX = 3 + i * 2
+                if pegX ~= displayPos or row ~= displayRow then
+                    monitor.setCursorPos(pegX, row)
+                    monitor.setTextColor(colors.gray)
+                    monitor.write(".")
+                end
+            end
+        end
     end
     
-    -- Draw multiplier slots at bottom
-    local slotY = h - 3
-    monitor.setCursorPos(1, slotY)
-    monitor.setTextColor(colors.white)
-    monitor.write("Multipliers:")
+    -- Draw multiplier slots at bottom (centered and colorful)
+    local slotStartY = h - 4
+    ui.drawCenteredText(monitor, slotStartY - 1, "MULTIPLIERS", colors.black, colors.white)
     
+    -- Draw slots in a visual grid
     for i = 1, 18 do
         local mult = MULTIPLIERS[i]
-        local x = 1 + ((i - 1) % 12) * 2
-        local y = slotY + 1 + math.floor((i - 1) / 12)
+        local col = ((i - 1) % 9)
+        local row = math.floor((i - 1) / 9)
+        local x = 2 + col * 2
+        local y = slotStartY + row
         
         monitor.setCursorPos(x, y)
         
         -- Color code by multiplier
+        local color = colors.white
         if mult >= 100 then
-            monitor.setTextColor(colors.red)
+            color = colors.red
         elseif mult >= 10 then
-            monitor.setTextColor(colors.orange)
+            color = colors.orange
         elseif mult >= 2 then
-            monitor.setTextColor(colors.yellow)
+            color = colors.yellow
         else
-            monitor.setTextColor(colors.blue)
+            color = colors.blue
+        end
+        
+        -- Highlight winning slot
+        if showResult and slot == i then
+            monitor.setBackgroundColor(color)
+            monitor.setTextColor(colors.black)
+        else
+            monitor.setBackgroundColor(colors.black)
+            monitor.setTextColor(color)
         end
         
         if mult >= 10 then
-            monitor.write(tostring(math.floor(mult)))
+            monitor.write(string.format("%3d", math.floor(mult)))
         elseif mult >= 1 then
-            monitor.write(tostring(mult))
+            monitor.write(string.format("%3.0f", mult))
         else
-            monitor.write(".2")
+            monitor.write(".2 ")
         end
+        monitor.setBackgroundColor(colors.black)
     end
     
-    if showResult and slot then
-        ui.drawCenteredText(monitor, h - 5, "Slot: " .. slot, colors.black, colors.white)
-        ui.drawCenteredText(monitor, h - 4, "Multiplier: " .. multiplier .. "x", colors.black, colors.lime)
+    if showResult and slot and payout then
+        ui.drawCenteredText(monitor, h - 2, "Slot " .. slot .. " = " .. multiplier .. "x", colors.black, colors.white)
+        
+        local profit = payout - bet
+        if profit > 0 then
+            ui.drawCenteredText(monitor, h - 1, "WON +" .. ui.formatNumber(profit), colors.black, colors.lime)
+        elseif profit < 0 then
+            ui.drawCenteredText(monitor, h - 1, "LOST " .. ui.formatNumber(profit), colors.black, colors.red)
+        else
+            ui.drawCenteredText(monitor, h - 1, "BREAK EVEN", colors.black, colors.orange)
+        end
     end
 end
 
@@ -128,39 +172,50 @@ local function drawBettingUI(monitor, balance, currentBet)
     
     ui.drawCenteredText(monitor, 1, "PLINKO", colors.black, colors.yellow)
     
-    ui.drawCenteredText(monitor, 4, "Place Your Bet", colors.black, colors.white)
-    ui.drawCenteredText(monitor, 5, "Current: " .. ui.formatNumber(currentBet), colors.black, colors.lime)
-    ui.drawCenteredText(monitor, 7, "Balance: " .. ui.formatNumber(balance), colors.black, colors.white)
+    ui.drawCenteredText(monitor, 3, "Place Your Bet", colors.black, colors.white)
     
+    -- Big bet display
+    ui.drawBox(monitor, 6, 5, 14, 3, colors.gray, colors.white)
+    ui.drawCenteredText(monitor, 6, ui.formatNumber(currentBet), colors.gray, colors.lime)
+    
+    ui.drawCenteredText(monitor, 8, "Balance: " .. ui.formatNumber(balance), colors.black, colors.white)
     ui.drawCenteredText(monitor, 9, "Min: " .. MIN_BET .. "  Max: " .. MAX_BET, colors.black, colors.gray)
     
-    -- Bet buttons
-    ui.drawButton(monitor, 2, 11, 6, 1, "+1", colors.green, colors.white)
-    ui.drawButton(monitor, 9, 11, 6, 1, "+5", colors.green, colors.white)
-    ui.drawButton(monitor, 16, 11, 6, 1, "+10", colors.green, colors.white)
+    -- Bet buttons (bigger and centered)
+    local btnW = 6
+    local startX = math.floor((w - (btnW * 3 + 2)) / 2)
     
-    ui.drawButton(monitor, 2, 13, 6, 1, "-1", colors.red, colors.white)
-    ui.drawButton(monitor, 9, 13, 6, 1, "-5", colors.red, colors.white)
-    ui.drawButton(monitor, 16, 13, 6, 1, "-10", colors.red, colors.white)
+    ui.drawButton(monitor, startX, 11, btnW, 2, "+1", colors.green, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, 11, btnW, 2, "+5", colors.green, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, 11, btnW, 2, "+10", colors.green, colors.white)
     
-    ui.drawButton(monitor, 6, h - 1, 10, 1, "DROP", colors.blue, colors.white)
-    ui.drawButton(monitor, w - 11, h - 1, 10, 1, "QUIT", colors.gray, colors.white)
+    ui.drawButton(monitor, startX, 14, btnW, 2, "-1", colors.red, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, 14, btnW, 2, "-5", colors.red, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, 14, btnW, 2, "-10", colors.red, colors.white)
+    
+    -- Action buttons
+    ui.drawButton(monitor, 3, h - 2, 8, 2, "DROP", colors.blue, colors.white)
+    ui.drawButton(monitor, w - 10, h - 2, 8, 2, "QUIT", colors.gray, colors.white)
 end
 
 -- Animate drop
-local function animateDrop(monitor, speaker)
+local function animateDrop(monitor, speaker, bet, balance)
     local path, slot = dropBall(speaker)
     
     -- Animate the drop
     for i, step in ipairs(path) do
-        drawBoard(monitor, path, i, false, nil, nil)
+        drawBoard(monitor, bet, balance, path, i, false, nil, nil, nil)
         sleep(0.1)
     end
     
-    -- Show final position
-    drawBoard(monitor, path, #path, true, slot, MULTIPLIERS[slot])
+    -- Calculate payout
+    local multiplier = MULTIPLIERS[slot]
+    local payout = math.floor(bet * multiplier)
     
-    return slot
+    -- Show final position with payout
+    drawBoard(monitor, bet, balance, path, #path, true, slot, multiplier, payout)
+    
+    return slot, payout
 end
 
 -- Send win/loss notification
@@ -217,30 +272,32 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
             local event, side, x, y = os.pullEvent("monitor_touch")
             
             local w, h = monitor.getSize()
+            local btnW = 6
+            local startX = math.floor((w - (btnW * 3 + 2)) / 2)
             
             -- Bet adjustment buttons
-            if ui.inBounds(x, y, 2, 11, 6, 1) then
+            if ui.inBounds(x, y, startX, 11, btnW, 2) then
                 currentBet = math.min(currentBet + 1, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 9, 11, 6, 1) then
+            elseif ui.inBounds(x, y, startX + btnW + 1, 11, btnW, 2) then
                 currentBet = math.min(currentBet + 5, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 16, 11, 6, 1) then
+            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, 11, btnW, 2) then
                 currentBet = math.min(currentBet + 10, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 2, 13, 6, 1) then
+            elseif ui.inBounds(x, y, startX, 14, btnW, 2) then
                 currentBet = math.max(currentBet - 1, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 9, 13, 6, 1) then
+            elseif ui.inBounds(x, y, startX + btnW + 1, 14, btnW, 2) then
                 currentBet = math.max(currentBet - 5, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 16, 13, 6, 1) then
+            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, 14, btnW, 2) then
                 currentBet = math.max(currentBet - 10, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 6, h - 1, 10, 1) then
+            elseif ui.inBounds(x, y, 3, h - 2, 8, 2) then
                 -- Drop
                 betting = false
-            elseif ui.inBounds(x, y, w - 11, h - 1, 10, 1) then
+            elseif ui.inBounds(x, y, w - 10, h - 2, 8, 2) then
                 -- Quit
                 return balance
             end
@@ -251,40 +308,26 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
         network.request("subtract_balance", {username = username, amount = currentBet})
         
         -- Drop ball
-        local slot = animateDrop(monitor, speaker)
-        local multiplier = MULTIPLIERS[slot]
+        local slot, payout = animateDrop(monitor, speaker, currentBet, balance)
         
-        -- Calculate payout (round down)
-        local payout = math.floor(currentBet * multiplier)
-        
-        local message = ""
-        local w, h = monitor.getSize()
-        
+        local profit = payout - currentBet
         if payout > 0 then
             balance = balance + payout
             network.request("add_balance", {username = username, amount = payout})
             
-            local profit = payout - currentBet
             if profit > 0 then
-                message = "WIN! +" .. ui.formatNumber(profit) .. " credits"
                 sendNotification(chatBox, username, profit, true, balance)
                 playSound(speaker, "minecraft:entity.player.levelup", 1, 1)
             elseif profit < 0 then
-                message = "LOSS! " .. ui.formatNumber(profit) .. " credits"
                 sendNotification(chatBox, username, math.abs(profit), false, balance)
                 playSound(speaker, "minecraft:entity.villager.no", 0.5, 0.8)
             else
-                message = "Break even!"
                 playSound(speaker, "minecraft:block.note_block.hat", 0.5, 1)
             end
         else
-            message = "LOSS! -" .. ui.formatNumber(currentBet) .. " credits"
             sendNotification(chatBox, username, currentBet, false, balance)
             playSound(speaker, "minecraft:entity.villager.no", 0.5, 0.8)
         end
-        
-        ui.drawCenteredText(monitor, h - 2, message, colors.black, colors.orange)
-        ui.drawCenteredText(monitor, h - 1, "Balance: " .. ui.formatNumber(balance), colors.black, colors.lime)
         
         sleep(3)
         

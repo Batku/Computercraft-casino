@@ -2,6 +2,7 @@
 -- Handles deposits, withdrawals, and player card creation
 
 local network = require("/casino/lib/network")
+local ui = require("/casino/lib/ui")
 
 -- Find peripherals
 local function initPeripherals()
@@ -24,57 +25,90 @@ local function initPeripherals()
     return monitor, inventoryManager, playerDetector
 end
 
--- Draw UI
-local function drawUI(monitor, message, balance)
+-- Draw main menu
+local function drawMainMenu(monitor, username, balance)
     monitor.setBackgroundColor(colors.black)
     monitor.clear()
     
     local w, h = monitor.getSize()
     
     -- Title
-    monitor.setCursorPos(math.floor((w - 13) / 2) + 1, 2)
-    monitor.setTextColor(colors.yellow)
-    monitor.write("CASINO CASHIER")
+    ui.drawCenteredText(monitor, 1, "CASINO CASHIER", colors.black, colors.yellow)
     
-    -- Instructions
-    monitor.setCursorPos(2, 4)
-    monitor.setTextColor(colors.white)
-    monitor.write("1. Deposit Diamonds")
-    
-    monitor.setCursorPos(2, 5)
-    monitor.write("2. Withdraw Credits")
-    
-    monitor.setCursorPos(2, 6)
-    monitor.write("3. Get Player Card")
-    
-    monitor.setCursorPos(2, 7)
-    monitor.write("4. Return Player Card")
-    
-    -- Balance display
-    if balance then
-        monitor.setCursorPos(2, 9)
-        monitor.setTextColor(colors.lime)
-        monitor.write("Balance: " .. balance .. " credits")
+    -- Player info
+    if username then
+        ui.drawCenteredText(monitor, 3, "Player: " .. username, colors.black, colors.white)
+        ui.drawCenteredText(monitor, 4, "Balance: " .. ui.formatNumber(balance or 0), colors.black, colors.lime)
+    else
+        ui.drawCenteredText(monitor, 3, "Insert Player Card", colors.black, colors.orange)
     end
     
-    -- Message
-    if message then
-        monitor.setCursorPos(2, h - 1)
-        monitor.setTextColor(colors.orange)
-        monitor.write(message)
+    -- Buttons
+    ui.drawButton(monitor, 3, 6, 19, 2, "DEPOSIT", colors.green, colors.white)
+    ui.drawButton(monitor, 3, 9, 19, 2, "WITHDRAW", colors.blue, colors.white)
+    
+    if not username then
+        ui.drawButton(monitor, 3, h - 2, 19, 2, "GET CARD", colors.purple, colors.white)
+    else
+        ui.drawButton(monitor, 3, h - 2, 19, 2, "RETURN CARD", colors.red, colors.white)
     end
 end
 
--- Create player card
-local function createPlayerCard(inventoryManager, username)
-    -- The player detector can create memory cards
-    -- We'll use the inventory manager to give it to them
-    local success = inventoryManager.addItemToPlayer("down", {
-        name = "advancedperipherals:memory_card",
-        count = 1
-    })
+-- Draw deposit UI
+local function drawDepositUI(monitor, availableDiamonds, selectedAmount, balance)
+    monitor.setBackgroundColor(colors.black)
+    monitor.clear()
     
-    return success > 0
+    local w, h = monitor.getSize()
+    
+    ui.drawCenteredText(monitor, 1, "DEPOSIT DIAMONDS", colors.black, colors.yellow)
+    
+    ui.drawCenteredText(monitor, 3, "Available: " .. availableDiamonds, colors.black, colors.white)
+    ui.drawCenteredText(monitor, 4, "Selected: " .. selectedAmount, colors.black, colors.lime)
+    
+    if balance then
+        ui.drawCenteredText(monitor, 5, "Balance: " .. ui.formatNumber(balance), colors.black, colors.gray)
+    end
+    
+    -- Amount buttons
+    ui.drawButton(monitor, 2, 7, 6, 1, "+1", colors.green, colors.white)
+    ui.drawButton(monitor, 9, 7, 6, 1, "+10", colors.green, colors.white)
+    ui.drawButton(monitor, 16, 7, 6, 1, "+64", colors.green, colors.white)
+    
+    ui.drawButton(monitor, 2, 9, 6, 1, "-1", colors.red, colors.white)
+    ui.drawButton(monitor, 9, 9, 6, 1, "-10", colors.red, colors.white)
+    ui.drawButton(monitor, 16, 9, 6, 1, "ALL", colors.orange, colors.white)
+    
+    -- Action buttons
+    ui.drawButton(monitor, 3, h - 3, 8, 2, "CONFIRM", colors.blue, colors.white)
+    ui.drawButton(monitor, 13, h - 3, 8, 2, "CANCEL", colors.gray, colors.white)
+end
+
+-- Draw withdraw UI
+local function drawWithdrawUI(monitor, maxWithdraw, selectedAmount, balance)
+    monitor.setBackgroundColor(colors.black)
+    monitor.clear()
+    
+    local w, h = monitor.getSize()
+    
+    ui.drawCenteredText(monitor, 1, "WITHDRAW CREDITS", colors.black, colors.yellow)
+    
+    ui.drawCenteredText(monitor, 3, "Balance: " .. ui.formatNumber(balance), colors.black, colors.lime)
+    ui.drawCenteredText(monitor, 4, "Max: " .. ui.formatNumber(maxWithdraw), colors.black, colors.white)
+    ui.drawCenteredText(monitor, 5, "Selected: " .. selectedAmount, colors.black, colors.orange)
+    
+    -- Amount buttons
+    ui.drawButton(monitor, 2, 7, 6, 1, "+1", colors.green, colors.white)
+    ui.drawButton(monitor, 9, 7, 6, 1, "+10", colors.green, colors.white)
+    ui.drawButton(monitor, 16, 7, 6, 1, "+64", colors.green, colors.white)
+    
+    ui.drawButton(monitor, 2, 9, 6, 1, "-1", colors.red, colors.white)
+    ui.drawButton(monitor, 9, 9, 6, 1, "-10", colors.red, colors.white)
+    ui.drawButton(monitor, 16, 9, 6, 1, "MAX", colors.orange, colors.white)
+    
+    -- Action buttons
+    ui.drawButton(monitor, 3, h - 3, 8, 2, "CONFIRM", colors.blue, colors.white)
+    ui.drawButton(monitor, 13, h - 3, 8, 2, "CANCEL", colors.gray, colors.white)
 end
 
 -- Get player username
@@ -83,15 +117,8 @@ local function getPlayerUsername(inventoryManager)
     return owner
 end
 
--- Deposit diamonds
-local function deposit(inventoryManager, monitor)
-    local username = getPlayerUsername(inventoryManager)
-    if not username then
-        drawUI(monitor, "Please insert player card first!", nil)
-        return
-    end
-    
-    -- Count diamonds in player inventory
+-- Count diamonds in player inventory
+local function countPlayerDiamonds(inventoryManager)
     local items = inventoryManager.getItems()
     local diamondCount = 0
     local diamondSlots = {}
@@ -103,57 +130,11 @@ local function deposit(inventoryManager, monitor)
         end
     end
     
-    if diamondCount == 0 then
-        drawUI(monitor, "No diamonds in inventory!", nil)
-        return
-    end
-    
-    -- Remove diamonds from player
-    local removed = 0
-    for _, slot in ipairs(diamondSlots) do
-        local count = inventoryManager.removeItemFromPlayer("up", {
-            name = "minecraft:diamond",
-            fromSlot = slot.slot,
-            count = slot.count
-        })
-        removed = removed + count
-    end
-    
-    -- Add credits to account
-    local success, data = network.request("add_balance", {
-        username = username,
-        amount = removed
-    })
-    
-    if success then
-        drawUI(monitor, "Deposited " .. removed .. " diamonds!", data.balance)
-    else
-        drawUI(monitor, "Error depositing diamonds!", nil)
-    end
+    return diamondCount, diamondSlots
 end
 
--- Withdraw credits
-local function withdraw(inventoryManager, monitor)
-    local username = getPlayerUsername(inventoryManager)
-    if not username then
-        drawUI(monitor, "Please insert player card first!", nil)
-        return
-    end
-    
-    -- Get current balance
-    local success, data = network.request("get_balance", {username = username})
-    if not success then
-        drawUI(monitor, "Error getting balance!", nil)
-        return
-    end
-    
-    local balance = data.balance
-    if balance == 0 then
-        drawUI(monitor, "No credits to withdraw!", balance)
-        return
-    end
-    
-    -- Check how many diamonds are available in chest
+-- Count diamonds in chest
+local function countChestDiamonds(inventoryManager)
     local list = inventoryManager.list()
     local availableDiamonds = 0
     
@@ -163,33 +144,162 @@ local function withdraw(inventoryManager, monitor)
         end
     end
     
-    local withdrawAmount = math.min(balance, availableDiamonds)
+    return availableDiamonds
+end
+
+-- Deposit diamonds
+local function deposit(inventoryManager, monitor, username, balance)
+    local availableDiamonds, diamondSlots = countPlayerDiamonds(inventoryManager)
     
-    if withdrawAmount == 0 then
-        drawUI(monitor, "No diamonds available in cashier!", balance)
-        return
+    if availableDiamonds == 0 then
+        monitor.setBackgroundColor(colors.black)
+        monitor.clear()
+        ui.drawCenteredText(monitor, 6, "No diamonds in inventory!", colors.black, colors.red)
+        sleep(2)
+        return balance
     end
     
-    -- Add diamonds to player
-    local added = inventoryManager.addItemToPlayer("up", {
-        name = "minecraft:diamond",
-        count = withdrawAmount
-    })
+    local selectedAmount = math.min(1, availableDiamonds)
     
-    if added > 0 then
-        -- Subtract credits
-        success, data = network.request("subtract_balance", {
-            username = username,
-            amount = added
-        })
+    while true do
+        drawDepositUI(monitor, availableDiamonds, selectedAmount, balance)
         
-        if success then
-            drawUI(monitor, "Withdrew " .. added .. " diamonds!", data.balance)
-        else
-            drawUI(monitor, "Error withdrawing!", balance)
+        local event, side, x, y = os.pullEvent("monitor_touch")
+        local w, h = monitor.getSize()
+        
+        -- Amount adjustment
+        if ui.inBounds(x, y, 2, 7, 6, 1) then
+            selectedAmount = math.min(selectedAmount + 1, availableDiamonds)
+        elseif ui.inBounds(x, y, 9, 7, 6, 1) then
+            selectedAmount = math.min(selectedAmount + 10, availableDiamonds)
+        elseif ui.inBounds(x, y, 16, 7, 6, 1) then
+            selectedAmount = math.min(selectedAmount + 64, availableDiamonds)
+        elseif ui.inBounds(x, y, 2, 9, 6, 1) then
+            selectedAmount = math.max(selectedAmount - 1, 1)
+        elseif ui.inBounds(x, y, 9, 9, 6, 1) then
+            selectedAmount = math.max(selectedAmount - 10, 1)
+        elseif ui.inBounds(x, y, 16, 9, 6, 1) then
+            selectedAmount = availableDiamonds
+        elseif ui.inBounds(x, y, 3, h - 3, 8, 2) then
+            -- Confirm
+            local removed = 0
+            local remaining = selectedAmount
+            
+            for _, slot in ipairs(diamondSlots) do
+                if remaining <= 0 then break end
+                
+                local toRemove = math.min(remaining, slot.count)
+                local count = inventoryManager.removeItemFromPlayer("back", {
+                    name = "minecraft:diamond",
+                    fromSlot = slot.slot,
+                    count = toRemove
+                })
+                removed = removed + count
+                remaining = remaining - count
+            end
+            
+            if removed > 0 then
+                local success, data = network.request("add_balance", {
+                    username = username,
+                    amount = removed
+                })
+                
+                if success then
+                    balance = data.balance
+                    monitor.setBackgroundColor(colors.black)
+                    monitor.clear()
+                    ui.drawCenteredText(monitor, 5, "Deposited!", colors.black, colors.lime)
+                    ui.drawCenteredText(monitor, 6, "+" .. ui.formatNumber(removed) .. " credits", colors.black, colors.white)
+                    ui.drawCenteredText(monitor, 7, "Balance: " .. ui.formatNumber(balance), colors.black, colors.yellow)
+                    sleep(2)
+                end
+            end
+            
+            return balance
+        elseif ui.inBounds(x, y, 13, h - 3, 8, 2) then
+            -- Cancel
+            return balance
         end
-    else
-        drawUI(monitor, "Inventory full or error!", balance)
+    end
+end
+
+-- Withdraw credits
+local function withdraw(inventoryManager, monitor, username, balance)
+    if balance == 0 then
+        monitor.setBackgroundColor(colors.black)
+        monitor.clear()
+        ui.drawCenteredText(monitor, 6, "No credits to withdraw!", colors.black, colors.red)
+        sleep(2)
+        return balance
+    end
+    
+    local availableDiamonds = countChestDiamonds(inventoryManager)
+    local maxWithdraw = math.min(balance, availableDiamonds)
+    
+    if maxWithdraw == 0 then
+        monitor.setBackgroundColor(colors.black)
+        monitor.clear()
+        ui.drawCenteredText(monitor, 6, "No diamonds available!", colors.black, colors.red)
+        ui.drawCenteredText(monitor, 7, "in cashier chest", colors.black, colors.red)
+        sleep(2)
+        return balance
+    end
+    
+    local selectedAmount = math.min(1, maxWithdraw)
+    
+    while true do
+        drawWithdrawUI(monitor, maxWithdraw, selectedAmount, balance)
+        
+        local event, side, x, y = os.pullEvent("monitor_touch")
+        local w, h = monitor.getSize()
+        
+        -- Amount adjustment
+        if ui.inBounds(x, y, 2, 7, 6, 1) then
+            selectedAmount = math.min(selectedAmount + 1, maxWithdraw)
+        elseif ui.inBounds(x, y, 9, 7, 6, 1) then
+            selectedAmount = math.min(selectedAmount + 10, maxWithdraw)
+        elseif ui.inBounds(x, y, 16, 7, 6, 1) then
+            selectedAmount = math.min(selectedAmount + 64, maxWithdraw)
+        elseif ui.inBounds(x, y, 2, 9, 6, 1) then
+            selectedAmount = math.max(selectedAmount - 1, 1)
+        elseif ui.inBounds(x, y, 9, 9, 6, 1) then
+            selectedAmount = math.max(selectedAmount - 10, 1)
+        elseif ui.inBounds(x, y, 16, 9, 6, 1) then
+            selectedAmount = maxWithdraw
+        elseif ui.inBounds(x, y, 3, h - 3, 8, 2) then
+            -- Confirm
+            local added = inventoryManager.addItemToPlayer("back", {
+                name = "minecraft:diamond",
+                count = selectedAmount
+            })
+            
+            if added > 0 then
+                local success, data = network.request("subtract_balance", {
+                    username = username,
+                    amount = added
+                })
+                
+                if success then
+                    balance = data.balance
+                    monitor.setBackgroundColor(colors.black)
+                    monitor.clear()
+                    ui.drawCenteredText(monitor, 5, "Withdrew!", colors.black, colors.lime)
+                    ui.drawCenteredText(monitor, 6, added .. " diamonds", colors.black, colors.white)
+                    ui.drawCenteredText(monitor, 7, "Balance: " .. ui.formatNumber(balance), colors.black, colors.yellow)
+                    sleep(2)
+                end
+            else
+                monitor.setBackgroundColor(colors.black)
+                monitor.clear()
+                ui.drawCenteredText(monitor, 6, "Inventory full!", colors.black, colors.red)
+                sleep(2)
+            end
+            
+            return balance
+        elseif ui.inBounds(x, y, 13, h - 3, 8, 2) then
+            -- Cancel
+            return balance
+        end
     end
 end
 
@@ -203,22 +313,61 @@ local function main()
     local monitor, inventoryManager, playerDetector = initPeripherals()
     print("Peripherals initialized")
     
-    drawUI(monitor, "Ready! Insert player card or select option", nil)
+    local currentUsername = nil
+    local currentBalance = 0
     
     while true do
-        local event, side, x, y = os.pullEvent()
+        -- Check for player card
+        currentUsername = getPlayerUsername(inventoryManager)
         
-        if event == "monitor_touch" then
-            -- Check which button was pressed
-            if y == 4 then
+        if currentUsername then
+            -- Get balance
+            local success, data = network.request("get_balance", {username = currentUsername})
+            if success then
+                currentBalance = data.balance
+            end
+        end
+        
+        drawMainMenu(monitor, currentUsername, currentBalance)
+        
+        local event, side, x, y = os.pullEvent("monitor_touch")
+        local w, h = monitor.getSize()
+        
+        if currentUsername then
+            -- Player card inserted
+            if ui.inBounds(x, y, 3, 6, 19, 2) then
                 -- Deposit
-                deposit(inventoryManager, monitor)
-            elseif y == 5 then
+                currentBalance = deposit(inventoryManager, monitor, currentUsername, currentBalance)
+            elseif ui.inBounds(x, y, 3, 9, 19, 2) then
                 -- Withdraw
-                withdraw(inventoryManager, monitor)
-            elseif y == 6 then
-                -- Get player card
-                -- First check if player is near
+                currentBalance = withdraw(inventoryManager, monitor, currentUsername, currentBalance)
+            elseif ui.inBounds(x, y, 3, h - 2, 19, 2) then
+                -- Return card
+                monitor.setBackgroundColor(colors.black)
+                monitor.clear()
+                ui.drawCenteredText(monitor, 5, "Returning card...", colors.black, colors.yellow)
+                ui.drawCenteredText(monitor, 7, "Final Balance:", colors.black, colors.white)
+                ui.drawCenteredText(monitor, 8, ui.formatNumber(currentBalance) .. " credits", colors.black, colors.lime)
+                
+                redstone.setOutput("back", true)
+                sleep(0.5)
+                redstone.setOutput("back", false)
+                
+                sleep(2)
+                currentUsername = nil
+                currentBalance = 0
+            end
+        else
+            -- No card inserted
+            if ui.inBounds(x, y, 3, 6, 19, 2) or ui.inBounds(x, y, 3, 9, 19, 2) then
+                -- Tried to deposit/withdraw without card
+                monitor.setBackgroundColor(colors.black)
+                monitor.clear()
+                ui.drawCenteredText(monitor, 6, "Please insert", colors.black, colors.red)
+                ui.drawCenteredText(monitor, 7, "player card first!", colors.black, colors.red)
+                sleep(2)
+            elseif ui.inBounds(x, y, 3, h - 2, 19, 2) then
+                -- Get new player card
                 local players = playerDetector.getPlayersInRange(5)
                 if #players > 0 then
                     local username = players[1]
@@ -226,31 +375,23 @@ local function main()
                     -- Create account if doesn't exist
                     network.request("create_account", {username = username})
                     
-                    -- Give player card
+                    -- Give player card (assuming you have a dispenser)
+                    monitor.setBackgroundColor(colors.black)
+                    monitor.clear()
+                    ui.drawCenteredText(monitor, 5, "Creating card for", colors.black, colors.yellow)
+                    ui.drawCenteredText(monitor, 6, username, colors.black, colors.white)
+                    
                     redstone.setOutput("right", true)
                     sleep(0.5)
                     redstone.setOutput("right", false)
                     
-                    drawUI(monitor, "Player card issued to " .. username, nil)
+                    sleep(2)
                 else
-                    drawUI(monitor, "No player detected nearby!", nil)
-                end
-            elseif y == 7 then
-                -- Return player card
-                local username = getPlayerUsername(inventoryManager)
-                if username then
-                    -- Get final balance
-                    local success, data = network.request("get_balance", {username = username})
-                    local balance = success and data.balance or 0
-                    
-                    -- Return card
-                    redstone.setOutput("back", true)
-                    sleep(0.5)
-                    redstone.setOutput("back", false)
-                    
-                    drawUI(monitor, "Card returned! Balance: " .. balance, nil)
-                else
-                    drawUI(monitor, "No player card detected!", nil)
+                    monitor.setBackgroundColor(colors.black)
+                    monitor.clear()
+                    ui.drawCenteredText(monitor, 6, "No player detected!", colors.black, colors.red)
+                    ui.drawCenteredText(monitor, 7, "Stand closer (5 blocks)", colors.black, colors.orange)
+                    sleep(2)
                 end
             end
         end
