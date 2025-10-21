@@ -3,7 +3,7 @@
 -- Usage: installer.lua <machine-type>
 -- Types: server, cashier, blackjack, slots, plinko
 
-local GITHUB_RAW = "https://raw.githubusercontent.com/YOUR_USERNAME/mc-casino/main/"
+local GITHUB_RAW = "https://raw.githubusercontent.com/batku/computercraft-casino/main/"
 
 local args = {...}
 local machineType = args[1]
