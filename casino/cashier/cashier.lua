@@ -11,12 +11,12 @@ local function initPeripherals()
     end
     monitor.setTextScale(0.5)
     
-    local inventoryManager = peripheral.find("inventoryManager")
+    local inventoryManager = peripheral.find("inventory_manager")
     if not inventoryManager then
         error("No inventory manager found!")
     end
     
-    local playerDetector = peripheral.find("playerDetector")
+    local playerDetector = peripheral.find("player_detector")
     if not playerDetector then
         error("No player detector found!")
     end

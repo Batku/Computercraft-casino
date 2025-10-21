@@ -28,13 +28,13 @@ local CARDS = {
 local function initPeripherals()
     local monitor = ui.init()
     
-    local inventoryManager = peripheral.find("inventoryManager")
+    local inventoryManager = peripheral.find("inventory_manager")
     if not inventoryManager then
         error("No inventory manager found!")
     end
     
     local speaker = peripheral.find("speaker")
-    local chatBox = peripheral.find("chatBox")
+    local chatBox = peripheral.find("chat_box")
     
     return monitor, inventoryManager, speaker, chatBox
 end
