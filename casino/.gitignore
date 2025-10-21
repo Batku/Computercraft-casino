@@ -1,0 +1,13 @@
+# Test files
+test_*.lua
+
+# Backup files
+*.bak
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Pastebin codes (optional - remove if you want to track them)
+pastebin_codes.txt
