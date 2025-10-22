@@ -111,30 +111,37 @@ local function drawSlots(monitor, reels, bet, balance, spinning, message, showBu
     
     local w, h = monitor.getSize()
     
-    -- Title
-    ui.drawCenteredText(monitor, 1, "SLOT MACHINE", colors.black, colors.yellow)
+    -- Title with spacing
+    monitor.setCursorPos(1, 1)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.orange)
+    local title = "S L O T S"
+    local titleX = math.floor((w - #title) / 2)
+    monitor.setCursorPos(titleX, 1)
+    monitor.write(title)
     
-    -- Bet and balance at top
+    -- Bet on left
     monitor.setCursorPos(2, 2)
     monitor.setTextColor(colors.lime)
     monitor.write("Bet: " .. ui.formatNumber(bet))
     
+    -- Balance on right
     monitor.setCursorPos(w - #("Bal: " .. ui.formatNumber(balance)) - 1, 2)
     monitor.write("Bal: " .. ui.formatNumber(balance))
     
-    -- Slot display (big and centered)
-    local slotY = 5
-    local slotW = 17
+    -- Slot display (BIGGER and centered)
+    local slotY = 6
+    local slotW = 21
     local slotX = math.floor((w - slotW) / 2)
     
-    ui.drawBox(monitor, slotX, slotY, slotW, 5, colors.gray, colors.white)
+    ui.drawBox(monitor, slotX, slotY, slotW, 7, colors.gray, colors.white)
     
     if spinning then
-        ui.drawCenteredText(monitor, slotY + 2, "*** SPINNING ***", colors.gray, colors.yellow)
+        ui.drawCenteredText(monitor, slotY + 3, "*** SPINNING ***", colors.gray, colors.yellow)
     elseif reels then
-        -- Draw reels with colors
+        -- Draw reels with colors (BIGGER)
         for i, reel in ipairs(reels) do
-            local x = slotX + 1 + ((i - 1) * 5)
+            local x = slotX + 2 + ((i - 1) * 6)
             
             -- Color based on symbol
             local symbolColor = colors.white
@@ -154,24 +161,36 @@ local function drawSlots(monitor, reels, bet, balance, spinning, message, showBu
                 symbolColor = colors.purple
             end
             
-            ui.drawBox(monitor, x, slotY + 1, 4, 3, symbolColor, colors.black)
-            monitor.setCursorPos(x + 1, slotY + 2)
+            ui.drawBox(monitor, x, slotY + 2, 5, 3, symbolColor, colors.black)
+            monitor.setCursorPos(x + 1, slotY + 3)
             monitor.setBackgroundColor(symbolColor)
             monitor.setTextColor(colors.black)
-            monitor.write(" " .. reel.display .. " ")
+            monitor.write("  " .. reel.display .. "  ")
             monitor.setBackgroundColor(colors.black)
         end
     end
     
-    -- Message
+    -- Message (higher up to avoid button overlap)
     if message then
-        ui.drawCenteredText(monitor, slotY + 6, message, colors.black, colors.orange)
+        monitor.setCursorPos(2, h - 5)
+        monitor.setBackgroundColor(colors.black)
+        local msgColor = message:find("WIN") and colors.lime or colors.red
+        monitor.setTextColor(msgColor)
+        monitor.write(message)
     end
     
-    -- Buttons at bottom
-    if showButtons then
-        ui.drawButton(monitor, 2, h - 3, 9, 3, "SPIN", colors.green, colors.white)
-        ui.drawButton(monitor, w - 10, h - 3, 9, 3, "QUIT", colors.gray, colors.white)
+    -- Buttons at bottom (CHANGE BET and SPIN)
+    if showButtons and not spinning then
+        local btnW = 10
+        local spacing = 2
+        local totalW = (btnW * 2) + spacing
+        local startX = math.floor((w - totalW) / 2)
+        
+        ui.drawButton(monitor, startX, h - 3, btnW, 3, "CHANGE BET", colors.orange, colors.white)
+        ui.drawButton(monitor, startX + btnW + spacing, h - 3, btnW, 3, "SPIN", colors.blue, colors.white)
+        
+        -- QUIT button in bottom left corner
+        ui.drawButton(monitor, 2, h - 3, 6, 3, "QUIT", colors.gray, colors.white)
     end
 end
 
@@ -182,32 +201,57 @@ local function drawBettingUI(monitor, balance, currentBet)
     
     local w, h = monitor.getSize()
     
-    ui.drawCenteredText(monitor, 1, "SLOT MACHINE", colors.black, colors.yellow)
+    -- Fancy title
+    monitor.setCursorPos(1, 1)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.orange)
+    local title = "S L O T S"
+    local titleX = math.floor((w - #title) / 2)
+    monitor.setCursorPos(titleX, 1)
+    monitor.write(title)
     
-    ui.drawCenteredText(monitor, 3, "Place Your Bet", colors.black, colors.white)
+    -- Decorative border
+    ui.drawCenteredText(monitor, 2, "-------------------", colors.black, colors.yellow)
     
-    -- Big bet display
-    ui.drawBox(monitor, 4, 5, 18, 3, colors.gray, colors.white)
-    ui.drawCenteredText(monitor, 6, ui.formatNumber(currentBet), colors.gray, colors.lime)
+    -- Large centered bet display with fancy styling
+    ui.drawCenteredText(monitor, 4, "~~ PLACE YOUR BET ~~", colors.black, colors.yellow)
     
-    ui.drawCenteredText(monitor, 9, "Balance: " .. ui.formatNumber(balance), colors.black, colors.white)
-    ui.drawCenteredText(monitor, 10, "Min: " .. MIN_BET .. "  Max: " .. MAX_BET, colors.black, colors.gray)
+    -- LARGE bet amount in center
+    monitor.setCursorPos(1, 6)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.lime)
+    local betText = ui.formatNumber(currentBet)
+    local betX = math.floor((w - #betText) / 2)
+    monitor.setCursorPos(betX, 6)
+    monitor.write(betText)
     
-    -- Bet buttons (bigger and centered)
+    -- LARGE balance in center
+    ui.drawCenteredText(monitor, 8, "Balance: " .. ui.formatNumber(balance), colors.black, colors.white)
+    ui.drawCenteredText(monitor, 9, "Min: " .. MIN_BET .. "  Max: " .. MAX_BET, colors.black, colors.gray)
+    
+    -- Bet buttons (bigger and centered, moved lower)
     local btnW = 7
     local startX = math.floor((w - (btnW * 3 + 2)) / 2)
     
-    ui.drawButton(monitor, startX, 12, btnW, 2, "+1", colors.green, colors.white)
-    ui.drawButton(monitor, startX + btnW + 1, 12, btnW, 2, "+5", colors.green, colors.white)
-    ui.drawButton(monitor, startX + (btnW + 1) * 2, 12, btnW, 2, "+10", colors.green, colors.white)
+    ui.drawButton(monitor, startX, h - 11, btnW, 2, "+1", colors.green, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, h - 11, btnW, 2, "+5", colors.green, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, h - 11, btnW, 2, "+10", colors.green, colors.white)
     
-    ui.drawButton(monitor, startX, 15, btnW, 2, "-1", colors.red, colors.white)
-    ui.drawButton(monitor, startX + btnW + 1, 15, btnW, 2, "-5", colors.red, colors.white)
-    ui.drawButton(monitor, startX + (btnW + 1) * 2, 15, btnW, 2, "-10", colors.red, colors.white)
+    ui.drawButton(monitor, startX, h - 8, btnW, 2, "-1", colors.red, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, h - 8, btnW, 2, "-5", colors.red, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, h - 8, btnW, 2, "-10", colors.red, colors.white)
     
-    -- Action buttons
-    ui.drawButton(monitor, 2, h - 3, 9, 3, "SPIN", colors.blue, colors.white)
-    ui.drawButton(monitor, w - 10, h - 3, 9, 3, "QUIT", colors.gray, colors.white)
+    -- MIN and MAX buttons
+    ui.drawButton(monitor, startX, h - 5, btnW, 2, "MIN", colors.orange, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, h - 5, btnW, 2, "MAX", colors.orange, colors.white)
+    
+    -- Action buttons at very bottom (SPIN centered and wider)
+    local spinW = 12
+    local spinX = math.floor((w - spinW) / 2)
+    ui.drawButton(monitor, spinX, h - 3, spinW, 3, "SPIN", colors.blue, colors.white)
+    
+    -- QUIT button in bottom left corner
+    ui.drawButton(monitor, 2, h - 3, 6, 3, "QUIT", colors.gray, colors.white)
 end
 
 -- Send win/loss notification
@@ -291,72 +335,120 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
             local w, h = monitor.getSize()
             local btnW = 7
             local startX = math.floor((w - (btnW * 3 + 2)) / 2)
+            local spinW = 12
+            local spinX = math.floor((w - spinW) / 2)
             
             -- Bet adjustment buttons
-            if ui.inBounds(x, y, startX, 12, btnW, 2) then
+            if ui.inBounds(x, y, startX, h - 11, btnW, 2) then
                 currentBet = math.min(currentBet + 1, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, startX + btnW + 1, 12, btnW, 2) then
+            elseif ui.inBounds(x, y, startX + btnW + 1, h - 11, btnW, 2) then
                 currentBet = math.min(currentBet + 5, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, 12, btnW, 2) then
+            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, h - 11, btnW, 2) then
                 currentBet = math.min(currentBet + 10, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, startX, 15, btnW, 2) then
+            elseif ui.inBounds(x, y, startX, h - 8, btnW, 2) then
                 currentBet = math.max(currentBet - 1, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, startX + btnW + 1, 15, btnW, 2) then
+            elseif ui.inBounds(x, y, startX + btnW + 1, h - 8, btnW, 2) then
                 currentBet = math.max(currentBet - 5, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, 15, btnW, 2) then
+            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, h - 8, btnW, 2) then
                 currentBet = math.max(currentBet - 10, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, 2, h - 3, 9, 3) then
-                -- Spin
+            elseif ui.inBounds(x, y, startX, h - 5, btnW, 2) then
+                -- MIN
+                currentBet = MIN_BET
+                drawBettingUI(monitor, balance, currentBet)
+            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, h - 5, btnW, 2) then
+                -- MAX
+                currentBet = math.min(balance, MAX_BET)
+                drawBettingUI(monitor, balance, currentBet)
+            elseif ui.inBounds(x, y, spinX, h - 3, spinW, 3) then
+                -- Spin (set bet and go to gameplay)
                 betting = false
-            elseif ui.inBounds(x, y, w - 10, h - 3, 9, 3) then
+            elseif ui.inBounds(x, y, 2, h - 3, 6, 3) then
                 -- Quit
                 return balance
             end
         end
         
-        -- Deduct bet from balance
-        balance = balance - currentBet
-        network.request("subtract_balance", {username = username, amount = currentBet})
-        
-        -- Spin reels
-        local reels = animateSpin(monitor, pool, speaker)
-        
-        -- Calculate payout
-        local payout = calculatePayout(reels, currentBet)
-        
-        local message = ""
-        if payout > 0 then
-            balance = balance + payout
-            network.request("add_balance", {username = username, amount = payout})
-            local profit = payout - currentBet
-            message = "WIN! +" .. ui.formatNumber(profit)
-            sendNotification(chatBox, username, profit, true, balance)
-            playSound(speaker, "minecraft:entity.player.levelup", 1, 1)
-        else
-            message = "No win. -" .. ui.formatNumber(currentBet)
-            sendNotification(chatBox, username, currentBet, false, balance)
-            playSound(speaker, "minecraft:entity.villager.no", 0.5, 0.8)
+        -- Now in gameplay mode - show slots with CHANGE BET and SPIN buttons
+        while true do
+            -- Show slots with buttons
+            drawSlots(monitor, nil, currentBet, balance, false, nil, true)
+            
+            local event, side, x, y = os.pullEvent("monitor_touch")
+            local w, h = monitor.getSize()
+            local btnW = 10
+            local spacing = 2
+            local totalW = (btnW * 2) + spacing
+            local startX = math.floor((w - totalW) / 2)
+            
+            if ui.inBounds(x, y, startX, h - 3, btnW, 3) then
+                -- CHANGE BET - go back to betting screen
+                break
+            elseif ui.inBounds(x, y, 2, h - 3, 6, 3) then
+                -- QUIT
+                return balance
+            elseif ui.inBounds(x, y, startX + btnW + spacing, h - 3, btnW, 3) then
+                -- SPIN - play the game
+                -- Deduct bet from balance
+                balance = balance - currentBet
+                network.request("subtract_balance", {username = username, amount = currentBet})
+                
+                -- Spin reels
+                local reels = animateSpin(monitor, pool, speaker)
+                
+                -- Calculate payout
+                local payout = calculatePayout(reels, currentBet)
+                
+                local message = ""
+                if payout > 0 then
+                    balance = balance + payout
+                    network.request("add_balance", {username = username, amount = payout})
+                    local profit = payout - currentBet
+                    message = "WIN! +" .. ui.formatNumber(profit)
+                    sendNotification(chatBox, username, profit, true, balance)
+                    playSound(speaker, "minecraft:entity.player.levelup", 1, 1)
+                else
+                    message = "No win. -" .. ui.formatNumber(currentBet)
+                    sendNotification(chatBox, username, currentBet, false, balance)
+                    playSound(speaker, "minecraft:entity.villager.no", 0.5, 0.8)
+                end
+                
+                drawSlots(monitor, reels, currentBet, balance, false, message, true)
+                
+                -- Show result and wait for SPIN click to skip or timeout
+                local skipTimer = os.startTimer(2)
+                while true do
+                    local event2, param1, param2, param3 = os.pullEvent()
+                    
+                    if event2 == "timer" and param1 == skipTimer then
+                        break  -- 2 second timeout
+                    elseif event2 == "monitor_touch" then
+                        -- Check if SPIN button was clicked to skip
+                        if ui.inBounds(param2, param3, startX + btnW + spacing, h - 3, btnW, 3) then
+                            os.cancelTimer(skipTimer)
+                            break  -- Skip immediately
+                        end
+                    end
+                end
+                
+                -- Check if player has enough balance
+                if balance < MIN_BET then
+                    monitor.setBackgroundColor(colors.black)
+                    monitor.clear()
+                    ui.drawCenteredText(monitor, 6, "Insufficient balance!", colors.black, colors.red)
+                    sleep(3)
+                    return balance
+                end
+                
+                currentBet = math.min(currentBet, balance, MAX_BET)
+                -- Stay in gameplay loop to allow multiple spins
+            end
         end
-        
-        drawSlots(monitor, reels, currentBet, balance, false, message, true)
-        sleep(2)
-        
-        -- Check if player has enough balance
-        if balance < MIN_BET then
-            monitor.setBackgroundColor(colors.black)
-            monitor.clear()
-            ui.drawCenteredText(monitor, 6, "Insufficient balance!", colors.black, colors.red)
-            sleep(3)
-            return balance
-        end
-        
-        currentBet = math.min(currentBet, balance, MAX_BET)
     end
 end
 
