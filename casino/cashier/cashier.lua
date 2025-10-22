@@ -438,6 +438,10 @@ local function main()
             end
             
             drawMainMenu(monitor, currentUsername, currentBalance)
+            
+            -- Make sure we're at the right scale for click detection
+            monitor.setTextScale(0.5)
+            
             local event, side
             event, side, x, y = os.pullEvent("monitor_touch")
         else
