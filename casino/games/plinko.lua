@@ -214,6 +214,9 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
         
         ui.drawButton(monitor, startX, h - 3, btnW, 3, "CHANGE BET", colors.orange, colors.white)
         ui.drawButton(monitor, startX + btnW + spacing, h - 3, btnW, 3, "DROP", colors.blue, colors.white)
+        
+        -- QUIT button in bottom left corner
+        ui.drawButton(monitor, 2, h - 3, 6, 3, "QUIT", colors.gray, colors.white)
     end
 end
 
@@ -273,7 +276,9 @@ local function drawBettingUI(monitor, balance, currentBet)
     local dropW = 12
     local dropX = math.floor((w - dropW) / 2)
     ui.drawButton(monitor, dropX, h - 3, dropW, 3, "DROP", colors.blue, colors.white)
-    ui.drawButton(monitor, w - 10, h - 3, 9, 3, "QUIT", colors.gray, colors.white)
+    
+    -- QUIT button in bottom left corner
+    ui.drawButton(monitor, 2, h - 3, 6, 3, "QUIT", colors.gray, colors.white)
 end
 
 -- Animate drop
@@ -385,7 +390,7 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
             elseif ui.inBounds(x, y, dropX, h - 3, dropW, 3) then
                 -- Drop (set bet and go to gameplay)
                 betting = false
-            elseif ui.inBounds(x, y, w - 10, h - 3, 9, 3) then
+            elseif ui.inBounds(x, y, 2, h - 3, 6, 3) then
                 -- Quit
                 return balance
             end
@@ -406,6 +411,9 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
             if ui.inBounds(x, y, startX, h - 3, btnW, 3) then
                 -- CHANGE BET - go back to betting screen
                 break
+            elseif ui.inBounds(x, y, 2, h - 3, 6, 3) then
+                -- QUIT
+                return balance
             elseif ui.inBounds(x, y, startX + btnW + spacing, h - 3, btnW, 3) then
                 -- DROP - play the game
                 -- Deduct bet from balance
