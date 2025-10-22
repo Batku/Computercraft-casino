@@ -129,19 +129,17 @@ local function drawSlots(monitor, reels, bet, balance, spinning, message, showBu
     monitor.setCursorPos(w - #("Bal: " .. ui.formatNumber(balance)) - 1, 2)
     monitor.write("Bal: " .. ui.formatNumber(balance))
     
-    -- Slot display (BIGGER and centered)
-    local slotY = 6
-    local slotW = 21
+    -- Slot display (MUCH BIGGER and centered)
+    local slotY = 5
+    local slotW = 23
     local slotX = math.floor((w - slotW) / 2)
     
-    ui.drawBox(monitor, slotX, slotY, slotW, 7, colors.gray, colors.white)
+    ui.drawBox(monitor, slotX, slotY, slotW, 9, colors.gray, colors.white)
     
-    if spinning then
-        ui.drawCenteredText(monitor, slotY + 3, "*** SPINNING ***", colors.gray, colors.yellow)
-    elseif reels then
-        -- Draw reels with colors (BIGGER)
+    if reels then
+        -- Draw reels with colors (MUCH BIGGER)
         for i, reel in ipairs(reels) do
-            local x = slotX + 2 + ((i - 1) * 6)
+            local x = slotX + 2 + ((i - 1) * 7)
             
             -- Color based on symbol
             local symbolColor = colors.white
@@ -161,11 +159,20 @@ local function drawSlots(monitor, reels, bet, balance, spinning, message, showBu
                 symbolColor = colors.purple
             end
             
-            ui.drawBox(monitor, x, slotY + 2, 5, 3, symbolColor, colors.black)
-            monitor.setCursorPos(x + 1, slotY + 3)
+            -- Draw bigger symbol box (6 wide x 5 tall)
+            ui.drawBox(monitor, x, slotY + 2, 6, 5, symbolColor, colors.black)
+            
+            -- Draw symbol BIGGER in center (3 lines for bigger look)
             monitor.setBackgroundColor(symbolColor)
             monitor.setTextColor(colors.black)
+            
+            monitor.setCursorPos(x + 2, slotY + 3)
+            monitor.write("  ")
+            monitor.setCursorPos(x + 1, slotY + 4)
             monitor.write("  " .. reel.display .. "  ")
+            monitor.setCursorPos(x + 2, slotY + 5)
+            monitor.write("  ")
+            
             monitor.setBackgroundColor(colors.black)
         end
     end
@@ -191,7 +198,120 @@ local function drawSlots(monitor, reels, bet, balance, spinning, message, showBu
         
         -- QUIT button in bottom left corner
         ui.drawButton(monitor, 2, h - 3, 6, 3, "QUIT", colors.gray, colors.white)
+        
+        -- PAYOUTS button in bottom right corner
+        ui.drawButton(monitor, w - 9, h - 3, 8, 3, "PAYOUTS", colors.purple, colors.white)
     end
+end
+
+-- Draw payouts screen
+local function drawPayoutsScreen(monitor)
+    monitor.setBackgroundColor(colors.black)
+    monitor.clear()
+    
+    local w, h = monitor.getSize()
+    
+    -- Title
+    monitor.setCursorPos(1, 1)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.orange)
+    local title = "P A Y O U T S"
+    local titleX = math.floor((w - #title) / 2)
+    monitor.setCursorPos(titleX, 1)
+    monitor.write(title)
+    
+    ui.drawCenteredText(monitor, 2, "-------------------", colors.black, colors.yellow)
+    
+    -- Payout table
+    local y = 4
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.red)
+    monitor.write(string.char(7) .. " " .. string.char(7) .. " " .. string.char(7))
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 500x")
+    
+    y = y + 1
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.cyan)
+    monitor.write(string.char(4) .. " " .. string.char(4) .. " " .. string.char(4))
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 100x")
+    
+    y = y + 1
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.yellow)
+    monitor.write(string.char(11) .. " " .. string.char(11) .. " " .. string.char(11))
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 50x")
+    
+    y = y + 1
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.pink)
+    monitor.write(string.char(3) .. " " .. string.char(3) .. " " .. string.char(3))
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 25x")
+    
+    y = y + 1
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.lime)
+    monitor.write(string.char(15) .. " " .. string.char(15) .. " " .. string.char(15))
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 15x")
+    
+    y = y + 1
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.orange)
+    monitor.write(string.char(9) .. " " .. string.char(9) .. " " .. string.char(9))
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 10x")
+    
+    y = y + 1
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.purple)
+    monitor.write(string.char(6) .. " " .. string.char(6) .. " " .. string.char(6))
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 5x")
+    
+    y = y + 2
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.pink)
+    monitor.write(string.char(3) .. " " .. string.char(3))
+    monitor.setTextColor(colors.gray)
+    monitor.write(" *")
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 3x")
+    
+    y = y + 1
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.pink)
+    monitor.write(string.char(3))
+    monitor.setTextColor(colors.gray)
+    monitor.write(" * ")
+    monitor.setTextColor(colors.pink)
+    monitor.write(string.char(3))
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 3x")
+    
+    y = y + 1
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.gray)
+    monitor.write("* ")
+    monitor.setTextColor(colors.pink)
+    monitor.write(string.char(3) .. " " .. string.char(3))
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 3x")
+    
+    y = y + 2
+    monitor.setCursorPos(2, y)
+    monitor.setTextColor(colors.pink)
+    monitor.write(string.char(3))
+    monitor.setTextColor(colors.gray)
+    monitor.write(" * *")
+    monitor.setTextColor(colors.white)
+    monitor.write(" = 2x")
+    
+    -- Back button
+    ui.drawButton(monitor, 2, h - 3, 6, 3, "BACK", colors.blue, colors.white)
 end
 
 -- Draw betting UI
@@ -296,20 +416,20 @@ local function playSound(speaker, sound, volume, pitch)
 end
 
 -- Animate spin
-local function animateSpin(monitor, pool, speaker)
+local function animateSpin(monitor, pool, speaker, bet, balance)
     local reels = {nil, nil, nil}
     
-    -- Spin animation
-    for frame = 1, 20 do
+    -- Spin animation with ACTUAL random symbols and colors
+    for frame = 1, 25 do
         reels = {
             spinReel(pool),
             spinReel(pool),
             spinReel(pool)
         }
         
-        drawSlots(monitor, reels, 0, 0, true, nil)
+        drawSlots(monitor, reels, bet, balance, false, nil, false)
         playSound(speaker, "minecraft:block.note_block.hat", 0.3, 0.8 + (frame * 0.02))
-        sleep(0.05)
+        sleep(0.04)
     end
     
     -- Final result with dramatic pause
@@ -392,14 +512,26 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
             elseif ui.inBounds(x, y, 2, h - 3, 6, 3) then
                 -- QUIT
                 return balance
+            elseif ui.inBounds(x, y, w - 9, h - 3, 8, 3) then
+                -- PAYOUTS - show payout table
+                drawPayoutsScreen(monitor)
+                while true do
+                    local evt, s, px, py = os.pullEvent("monitor_touch")
+                    if ui.inBounds(px, py, 2, h - 3, 6, 3) then
+                        -- BACK button clicked
+                        break
+                    end
+                end
+                -- Redraw slots screen after returning from payouts
+                drawSlots(monitor, nil, currentBet, balance, false, nil, true)
             elseif ui.inBounds(x, y, startX + btnW + spacing, h - 3, btnW, 3) then
                 -- SPIN - play the game
                 -- Deduct bet from balance
                 balance = balance - currentBet
                 network.request("subtract_balance", {username = username, amount = currentBet})
                 
-                -- Spin reels
-                local reels = animateSpin(monitor, pool, speaker)
+                -- Spin reels with animation showing bet and balance
+                local reels = animateSpin(monitor, pool, speaker, currentBet, balance)
                 
                 -- Calculate payout
                 local payout = calculatePayout(reels, currentBet)
