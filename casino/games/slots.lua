@@ -15,7 +15,7 @@ local SYMBOLS = {
     {name = "Bell", display = string.char(11), weight = 4},   -- Male symbol ♂
     {name = "Cherry", display = string.char(3), weight = 8},  -- Heart ♥
     {name = "Lemon", display = string.char(15), weight = 12}, -- Sun ☼
-    {name = "Orange", display = string.char(9), weight = 15}, -- Circle ○
+    {name = "Orange", display = string.char(164), weight = 15}, -- Circle ○
     {name = "Plum", display = string.char(6), weight = 18}    -- Spade ♠
 }
 
@@ -261,7 +261,7 @@ local function drawPayoutsScreen(monitor)
     y = y + 1
     monitor.setCursorPos(2, y)
     monitor.setTextColor(colors.orange)
-    monitor.write(string.char(9) .. " " .. string.char(9) .. " " .. string.char(9))
+    monitor.write(string.char(164) .. " " .. string.char(164) .. " " .. string.char(164))
     monitor.setTextColor(colors.white)
     monitor.write(" = 10x")
     
