@@ -61,11 +61,14 @@ local function drawMainMenu(monitor, username, balance)
         ui.drawButton(monitor, btnX, h - 5, btnW, 3, "RETURN CARD", colors.red, colors.white)
     else
         -- No card - bigger text idle screen
-        monitor.setTextScale(2)
-        local w2, h2 = monitor.getSize()
+        monitor.setTextScale(0.5)
         
         monitor.setBackgroundColor(colors.black)
         monitor.setTextColor(colors.orange)
+        
+        -- Draw CASHIER with text scale 2
+        monitor.setTextScale(2)
+        local w2, h2 = monitor.getSize()
         local title = "CASHIER"
         local titleX = math.floor((w2 - #title) / 2)
         monitor.setCursorPos(titleX, 2)
@@ -158,9 +161,6 @@ local function drawWithdrawUI(monitor, maxWithdraw, selectedAmount, balance)
     
     ui.drawCenteredText(monitor, 2, "-------------------", colors.black, colors.yellow)
     
-    ui.drawCenteredText(monitor, 3, "Balance: " .. ui.formatNumber(balance), colors.black, colors.lime)
-    ui.drawCenteredText(monitor, 3, "Max: " .. ui.formatNumber(maxWithdraw), colors.black, colors.white)
-    
     -- LARGE selected amount in center
     monitor.setCursorPos(1, 4)
     monitor.setBackgroundColor(colors.black)
@@ -181,6 +181,10 @@ local function drawWithdrawUI(monitor, maxWithdraw, selectedAmount, balance)
     ui.drawButton(monitor, startX, 10, btnW, 3, "-1", colors.red, colors.white)
     ui.drawButton(monitor, startX + btnW + 1, 10, btnW, 3, "-10", colors.red, colors.white)
     ui.drawButton(monitor, startX + (btnW + 1) * 2, 10, btnW, 3, "MAX", colors.orange, colors.white)
+    
+    -- Balance and max info below buttons
+    ui.drawCenteredText(monitor, h - 8, "Balance: " .. ui.formatNumber(balance), colors.black, colors.lime)
+    ui.drawCenteredText(monitor, h - 7, "Max: " .. ui.formatNumber(maxWithdraw), colors.black, colors.white)
     
     -- Action buttons
     local btnW2 = 10
