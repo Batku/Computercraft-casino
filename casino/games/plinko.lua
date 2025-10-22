@@ -78,12 +78,13 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
     local boardHeight = h - 6  -- Fill most of screen height, leave room for multipliers
     local pegRows = 16
     local pegCols = 18
+    local pegStartX = math.floor((w - pegCols) / 2)  -- Center the pegs
     
-    -- Draw pegs in simple rectangular grid pattern
+    -- Draw pegs in simple rectangular grid pattern (centered)
     for row = 0, pegRows - 1 do
         local rowY = boardStartY + row
         for col = 0, pegCols - 1 do
-            local pegX = 3 + col
+            local pegX = pegStartX + col
             monitor.setCursorPos(pegX, rowY)
             monitor.setBackgroundColor(colors.black)
             monitor.setTextColor(colors.gray)
@@ -94,7 +95,7 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
     -- Draw ball on top of pegs if dropping
     if currentRow and currentRow > 0 and path then
         local displayRow = math.floor((currentRow / ROWS) * (pegRows - 1)) + boardStartY
-        local displayPos = 3 + math.floor(((path[currentRow].position) / 17) * (pegCols - 1))
+        local displayPos = pegStartX + math.floor(((path[currentRow].position) / 17) * (pegCols - 1))
         
         monitor.setCursorPos(displayPos, displayRow)
         monitor.setBackgroundColor(colors.yellow)
@@ -109,14 +110,15 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
     monitor.setTextColor(colors.lime)
     monitor.write("Bal: " .. ui.formatNumber(balance))
     
-    -- Draw multiplier slots at bottom in correct positions (18 slots across bottom)
+    -- Draw multiplier slots at bottom in correct positions (18 slots directly below pegs)
     local slotY = h - 2
+    local pegStartX = math.floor((w - pegCols) / 2)
     
-    -- Draw each multiplier directly below its corresponding slot position
+    -- Draw each multiplier directly below its corresponding peg column
     for i = 1, 18 do
         local mult = MULTIPLIERS[i]
-        -- Position multipliers evenly across the width
-        local x = math.floor(2 + ((i - 1) * (w - 4) / 17))
+        -- Position multipliers directly below the peg columns
+        local x = pegStartX + (i - 1)
         
         monitor.setCursorPos(x, slotY)
         
@@ -141,15 +143,17 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
             monitor.setTextColor(color)
         end
         
-        -- Format multiplier text
-        if mult >= 100 then
-            monitor.write(string.format("%dX", math.floor(mult)))
+        -- Format multiplier text (compact single character when possible)
+        if mult >= 1000 then
+            monitor.write("K")  -- K for 1000x
+        elseif mult >= 100 then
+            monitor.write(string.format("%d", math.floor(mult / 10)))  -- Show as tens (e.g., 13 for 130)
         elseif mult >= 10 then
-            monitor.write(string.format("%dX", math.floor(mult)))
+            monitor.write(string.format("%d", math.floor(mult)))
         elseif mult >= 1 then
-            monitor.write(string.format("%dX", math.floor(mult)))
+            monitor.write(string.format("%d", math.floor(mult)))
         else
-            monitor.write(".2")
+            monitor.write("0")  -- 0 for 0.2x
         end
         monitor.setBackgroundColor(colors.black)
     end
