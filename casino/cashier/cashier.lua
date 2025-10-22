@@ -517,9 +517,14 @@ local function main()
             
             -- Need to recheck username since we broke out of loop
             currentUsername = getPlayerUsername(inventoryManager)
+            
+            -- If card was detected during animation, loop back to show menu
+            if currentUsername then
+                -- Continue to next iteration to show the menu
+            end
         end
         
-        if currentUsername then
+        if currentUsername and x then
             -- Card inserted - buttons at scale 0.5
             monitor.setTextScale(0.5)
             local w, h = monitor.getSize()
