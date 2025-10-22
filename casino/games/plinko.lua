@@ -91,16 +91,18 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
         monitor.write("O")
         monitor.setBackgroundColor(colors.black)
         
-        -- Draw pegs in triangle pattern (fewer, bigger spacing to match ball movement)
-        for row = 0, ROWS - 1 do
-            local rowY = boardStartY + math.floor((row / ROWS) * boardHeight)
-            local pegsInRow = math.min(row + 3, 18)
-            for i = 0, pegsInRow - 1 do
-                local pegPos = math.floor(boardStartX + ((i / (pegsInRow - 1)) * (boardWidth - 1)))
-                if pegPos ~= displayPos or rowY ~= displayRow then
-                    monitor.setCursorPos(pegPos, rowY)
-                    monitor.setTextColor(colors.gray)
-                    monitor.write("o")  -- Bigger dot character
+        -- Draw pegs in simple grid pattern (clean and evenly spaced)
+        for row = 0, 15 do
+            local rowY = boardStartY + row
+            if rowY < boardStartY + boardHeight then
+                for col = 0, 17 do
+                    local pegX = boardStartX + 2 + col
+                    -- Don't draw peg where ball is
+                    if pegX ~= displayPos or rowY ~= displayRow then
+                        monitor.setCursorPos(pegX, rowY)
+                        monitor.setTextColor(colors.gray)
+                        monitor.write(".")
+                    end
                 end
             end
         end
