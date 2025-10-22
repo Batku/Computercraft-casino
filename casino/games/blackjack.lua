@@ -446,16 +446,53 @@ local function main()
     print("Peripherals initialized")
     
     while true do
-        -- Show idle screen
-        ui.drawIdleScreen(monitor, "BLACKJACK")
+        -- Show simple idle screen with BIG text
+        monitor.setBackgroundColor(colors.black)
+        monitor.clear()
+        monitor.setTextScale(2)  -- BIG text for idle screen
+        
+        local w, h = monitor.getSize()
+        
+        -- Min/Max bet info (centered)
+        monitor.setCursorPos(1, 3)
+        monitor.setTextColor(colors.white)
+        ui.drawCenteredText(monitor, 3, "Min: " .. MIN_BET, colors.black, colors.white)
+        
+        monitor.setCursorPos(1, 4)
+        ui.drawCenteredText(monitor, 4, "Max: " .. MAX_BET, colors.black, colors.white)
+        
+        -- Animated "DROP CARD" prompt
+        local frame = math.floor(os.epoch("utc") / 500) % 2
+        if frame == 0 then
+            ui.drawCenteredText(monitor, 6, "DROP CARD", colors.black, colors.lime)
+        else
+            ui.drawCenteredText(monitor, 6, "DROP CARD", colors.black, colors.green)
+        end
+        
+        monitor.setCursorPos(1, 7)
+        monitor.setTextColor(colors.white)
+        ui.drawCenteredText(monitor, 7, "to play!", colors.black, colors.white)
         
         -- Wait for player card
         while true do
             local owner = inventoryManager.getOwner()
             if owner then
+                monitor.setTextScale(1)  -- Reset to normal size
                 break
             end
             sleep(0.5)
+            
+            -- Redraw for animation
+            local newFrame = math.floor(os.epoch("utc") / 500) % 2
+            if newFrame ~= frame then
+                frame = newFrame
+                monitor.setTextScale(2)
+                if frame == 0 then
+                    ui.drawCenteredText(monitor, 6, "DROP CARD", colors.black, colors.lime)
+                else
+                    ui.drawCenteredText(monitor, 6, "DROP CARD", colors.black, colors.green)
+                end
+            end
         end
         
         local username = inventoryManager.getOwner()

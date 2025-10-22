@@ -434,55 +434,38 @@ local function main()
     print("Peripherals initialized")
     
     while true do
-        -- Show fancy idle screen
+        -- Show simple idle screen with BIG text
         monitor.setBackgroundColor(colors.black)
         monitor.clear()
+        monitor.setTextScale(2)  -- BIG text for idle screen
         
         local w, h = monitor.getSize()
         
-        -- Big ASCII ART PLINKO title (centered vertically)
-        local startY = 2
-        monitor.setTextColor(colors.orange)
-        ui.drawCenteredText(monitor, startY, " ###  #    ### #  # #  #  ###", colors.black, colors.orange)
-        ui.drawCenteredText(monitor, startY + 1, " #  # #     #  ## # # #  #   #", colors.black, colors.orange)
-        ui.drawCenteredText(monitor, startY + 2, " ###  #     #  # ## ##   #   #", colors.black, colors.yellow)
-        ui.drawCenteredText(monitor, startY + 3, " #    #     #  #  # # #  #   #", colors.black, colors.yellow)
-        ui.drawCenteredText(monitor, startY + 4, " #    ### ###  #  # #  #  ### ", colors.black, colors.yellow)
+        -- Min/Max bet info (centered)
+        monitor.setCursorPos(1, 3)
+        monitor.setTextColor(colors.white)
+        ui.drawCenteredText(monitor, 3, "Min: " .. MIN_BET, colors.black, colors.white)
         
-        -- Decorative line
-        ui.drawCenteredText(monitor, startY + 6, "===========================", colors.black, colors.yellow)
+        monitor.setCursorPos(1, 4)
+        ui.drawCenteredText(monitor, 4, "Max: " .. MAX_BET, colors.black, colors.white)
         
-        -- HUGE Decorative pegs filling screen
-        ui.drawCenteredText(monitor, startY + 8, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, startY + 9, " o o o o o o o o o o o ", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, startY + 10, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, startY + 11, " o o o o o o o o o o o ", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, startY + 12, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, startY + 13, " o o o o o o o o o o o ", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, startY + 14, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, startY + 15, " o o o o o O o o o o o ", colors.black, colors.yellow)
-        ui.drawCenteredText(monitor, startY + 16, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, startY + 17, " o o o o o o o o o o o ", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, startY + 18, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, startY + 19, " o o o o o o o o o o o ", colors.black, colors.gray)
-        
-        -- Bet info
-        ui.drawCenteredText(monitor, h - 5, "Min Bet: " .. MIN_BET .. " | Max: " .. MAX_BET, colors.black, colors.white)
-        
-        -- Animated prompt
+        -- Animated "DROP CARD" prompt
         local frame = math.floor(os.epoch("utc") / 500) % 2
         if frame == 0 then
-            ui.drawCenteredText(monitor, h - 3, ">>> DROP CARD <<<", colors.black, colors.lime)
+            ui.drawCenteredText(monitor, 6, "DROP CARD", colors.black, colors.lime)
         else
-            ui.drawCenteredText(monitor, h - 3, ">>> DROP CARD <<<", colors.black, colors.green)
+            ui.drawCenteredText(monitor, 6, "DROP CARD", colors.black, colors.green)
         end
         
-        ui.drawCenteredText(monitor, h - 2, "to start playing!", colors.black, colors.white)
+        monitor.setCursorPos(1, 7)
+        monitor.setTextColor(colors.white)
+        ui.drawCenteredText(monitor, 7, "to play!", colors.black, colors.white)
         
         -- Wait for player card
         while true do
             local owner = inventoryManager.getOwner()
             if owner then
+                monitor.setTextScale(1)  -- Reset to normal size
                 break
             end
             sleep(0.5)
@@ -491,10 +474,11 @@ local function main()
             local newFrame = math.floor(os.epoch("utc") / 500) % 2
             if newFrame ~= frame then
                 frame = newFrame
+                monitor.setTextScale(2)
                 if frame == 0 then
-                    ui.drawCenteredText(monitor, h - 3, ">>> DROP CARD <<<", colors.black, colors.lime)
+                    ui.drawCenteredText(monitor, 6, "DROP CARD", colors.black, colors.lime)
                 else
-                    ui.drawCenteredText(monitor, h - 3, ">>> DROP CARD <<<", colors.black, colors.green)
+                    ui.drawCenteredText(monitor, 6, "DROP CARD", colors.black, colors.green)
                 end
             end
         end
