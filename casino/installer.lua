@@ -38,6 +38,22 @@ local function download(url, path)
     print("  ✓ " .. path)
 end
 
+local function createStartup(scriptPath, machineName)
+    print("Creating startup script...")
+    
+    local startupContent = string.format([[
+-- Auto-start script for Casino %s
+print("Starting Casino %s...")
+shell.run("%s")
+]], machineName, machineName, scriptPath)
+    
+    local file = fs.open("/startup.lua", "w")
+    file.write(startupContent)
+    file.close()
+    
+    print("  ✓ /startup.lua")
+end
+
 local function installCommon()
     print("Installing common libraries...")
     download(GITHUB_RAW .. "lib/network.lua", "/casino/lib/network.lua")
@@ -47,9 +63,11 @@ local function installServer()
     print("Installing Central Server...")
     installCommon()
     download(GITHUB_RAW .. "server/server.lua", "/casino/server/server.lua")
+    createStartup("/casino/server/server.lua", "Server")
     
     print("\n=== Installation Complete ===")
     print("Start with: /casino/server/server.lua")
+    print("Or reboot to auto-start")
     print("\nRequirements:")
     print("- Wired Modem")
     print("- Disk Drive + Floppy Disk")
@@ -60,9 +78,11 @@ local function installCashier()
     installCommon()
     download(GITHUB_RAW .. "lib/ui.lua", "/casino/lib/ui.lua")
     download(GITHUB_RAW .. "cashier/cashier.lua", "/casino/cashier/cashier.lua")
+    createStartup("/casino/cashier/cashier.lua", "Cashier")
     
     print("\n=== Installation Complete ===")
     print("Start with: /casino/cashier/cashier.lua")
+    print("Or reboot to auto-start")
     print("\nRequirements:")
     print("- Wired Modem")
     print("- 5x4 Monitor")
@@ -77,9 +97,11 @@ local function installGame(gameName)
     installCommon()
     download(GITHUB_RAW .. "lib/ui.lua", "/casino/lib/ui.lua")
     download(GITHUB_RAW .. "games/" .. gameName .. ".lua", "/casino/games/" .. gameName .. ".lua")
+    createStartup("/casino/games/" .. gameName .. ".lua", gameName:sub(1,1):upper() .. gameName:sub(2))
     
     print("\n=== Installation Complete ===")
     print("Start with: /casino/games/" .. gameName .. ".lua")
+    print("Or reboot to auto-start")
     print("\nRequirements:")
     print("- Wired Modem")
     print("- 5x4 Monitor (touchscreen)")
