@@ -32,25 +32,46 @@ local function drawMainMenu(monitor, username, balance)
     
     local w, h = monitor.getSize()
     
-    -- Title
-    ui.drawCenteredText(monitor, 1, "CASINO CASHIER", colors.black, colors.yellow)
+    -- Fancy title with spacing
+    monitor.setCursorPos(1, 1)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.orange)
+    local title = "C A S H I E R"
+    local titleX = math.floor((w - #title) / 2)
+    monitor.setCursorPos(titleX, 1)
+    monitor.write(title)
+    
+    -- Decorative border
+    ui.drawCenteredText(monitor, 2, "-------------------", colors.black, colors.yellow)
     
     -- Player info
     if username then
-        ui.drawCenteredText(monitor, 3, "Player: " .. username, colors.black, colors.white)
-        ui.drawCenteredText(monitor, 4, "Balance: " .. ui.formatNumber(balance or 0), colors.black, colors.lime)
+        monitor.setCursorPos(2, 4)
+        monitor.setTextColor(colors.white)
+        monitor.write("Player: ")
+        monitor.setTextColor(colors.lime)
+        monitor.write(username)
+        
+        monitor.setCursorPos(2, 5)
+        monitor.setTextColor(colors.white)
+        monitor.write("Balance: ")
+        monitor.setTextColor(colors.lime)
+        monitor.write(ui.formatNumber(balance or 0))
     else
-        ui.drawCenteredText(monitor, 3, "Insert Player Card", colors.black, colors.orange)
+        ui.drawCenteredText(monitor, 4, "Insert Player Card", colors.black, colors.orange)
     end
     
-    -- Buttons
-    ui.drawButton(monitor, 3, 6, 19, 2, "DEPOSIT", colors.green, colors.white)
-    ui.drawButton(monitor, 3, 9, 19, 2, "WITHDRAW", colors.blue, colors.white)
+    -- Bigger centered buttons
+    local btnW = 15
+    local btnX = math.floor((w - btnW) / 2)
+    
+    ui.drawButton(monitor, btnX, 8, btnW, 3, "DEPOSIT", colors.green, colors.white)
+    ui.drawButton(monitor, btnX, 12, btnW, 3, "WITHDRAW", colors.blue, colors.white)
     
     if not username then
-        ui.drawButton(monitor, 3, h - 2, 19, 2, "GET CARD", colors.purple, colors.white)
+        ui.drawButton(monitor, btnX, h - 3, btnW, 3, "GET CARD", colors.purple, colors.white)
     else
-        ui.drawButton(monitor, 3, h - 2, 19, 2, "RETURN CARD", colors.red, colors.white)
+        ui.drawButton(monitor, btnX, h - 3, btnW, 3, "RETURN CARD", colors.red, colors.white)
     end
 end
 
@@ -61,27 +82,52 @@ local function drawDepositUI(monitor, availableDiamonds, selectedAmount, balance
     
     local w, h = monitor.getSize()
     
-    ui.drawCenteredText(monitor, 1, "DEPOSIT DIAMONDS", colors.black, colors.yellow)
+    -- Fancy title
+    monitor.setCursorPos(1, 1)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.orange)
+    local title = "D E P O S I T"
+    local titleX = math.floor((w - #title) / 2)
+    monitor.setCursorPos(titleX, 1)
+    monitor.write(title)
     
-    ui.drawCenteredText(monitor, 3, "Available: " .. availableDiamonds, colors.black, colors.white)
-    ui.drawCenteredText(monitor, 4, "Selected: " .. selectedAmount, colors.black, colors.lime)
+    ui.drawCenteredText(monitor, 2, "-------------------", colors.black, colors.yellow)
+    
+    ui.drawCenteredText(monitor, 4, "Available: " .. availableDiamonds, colors.black, colors.white)
+    
+    -- LARGE selected amount in center
+    monitor.setCursorPos(1, 6)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.lime)
+    local amtText = tostring(selectedAmount)
+    local amtX = math.floor((w - #amtText) / 2)
+    monitor.setCursorPos(amtX, 6)
+    monitor.write(amtText)
     
     if balance then
-        ui.drawCenteredText(monitor, 5, "Balance: " .. ui.formatNumber(balance), colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 8, "Balance: " .. ui.formatNumber(balance), colors.black, colors.gray)
     end
     
-    -- Amount buttons
-    ui.drawButton(monitor, 2, 7, 6, 1, "+1", colors.green, colors.white)
-    ui.drawButton(monitor, 9, 7, 6, 1, "+10", colors.green, colors.white)
-    ui.drawButton(monitor, 16, 7, 6, 1, "+64", colors.green, colors.white)
+    -- Amount buttons (bigger and centered)
+    local btnW = 7
+    local startX = math.floor((w - (btnW * 3 + 2)) / 2)
     
-    ui.drawButton(monitor, 2, 9, 6, 1, "-1", colors.red, colors.white)
-    ui.drawButton(monitor, 9, 9, 6, 1, "-10", colors.red, colors.white)
-    ui.drawButton(monitor, 16, 9, 6, 1, "ALL", colors.orange, colors.white)
+    ui.drawButton(monitor, startX, h - 11, btnW, 2, "+1", colors.green, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, h - 11, btnW, 2, "+10", colors.green, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, h - 11, btnW, 2, "+64", colors.green, colors.white)
+    
+    ui.drawButton(monitor, startX, h - 8, btnW, 2, "-1", colors.red, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, h - 8, btnW, 2, "-10", colors.red, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, h - 8, btnW, 2, "ALL", colors.orange, colors.white)
     
     -- Action buttons
-    ui.drawButton(monitor, 3, h - 3, 8, 2, "CONFIRM", colors.blue, colors.white)
-    ui.drawButton(monitor, 13, h - 3, 8, 2, "CANCEL", colors.gray, colors.white)
+    local btnW2 = 10
+    local spacing = 2
+    local totalW = (btnW2 * 2) + spacing
+    local startX2 = math.floor((w - totalW) / 2)
+    
+    ui.drawButton(monitor, startX2, h - 3, btnW2, 3, "CONFIRM", colors.blue, colors.white)
+    ui.drawButton(monitor, startX2 + btnW2 + spacing, h - 3, btnW2, 3, "CANCEL", colors.gray, colors.white)
 end
 
 -- Draw withdraw UI
@@ -91,24 +137,49 @@ local function drawWithdrawUI(monitor, maxWithdraw, selectedAmount, balance)
     
     local w, h = monitor.getSize()
     
-    ui.drawCenteredText(monitor, 1, "WITHDRAW CREDITS", colors.black, colors.yellow)
+    -- Fancy title
+    monitor.setCursorPos(1, 1)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.orange)
+    local title = "W I T H D R A W"
+    local titleX = math.floor((w - #title) / 2)
+    monitor.setCursorPos(titleX, 1)
+    monitor.write(title)
     
-    ui.drawCenteredText(monitor, 3, "Balance: " .. ui.formatNumber(balance), colors.black, colors.lime)
-    ui.drawCenteredText(monitor, 4, "Max: " .. ui.formatNumber(maxWithdraw), colors.black, colors.white)
-    ui.drawCenteredText(monitor, 5, "Selected: " .. selectedAmount, colors.black, colors.orange)
+    ui.drawCenteredText(monitor, 2, "-------------------", colors.black, colors.yellow)
     
-    -- Amount buttons
-    ui.drawButton(monitor, 2, 7, 6, 1, "+1", colors.green, colors.white)
-    ui.drawButton(monitor, 9, 7, 6, 1, "+10", colors.green, colors.white)
-    ui.drawButton(monitor, 16, 7, 6, 1, "+64", colors.green, colors.white)
+    ui.drawCenteredText(monitor, 4, "Balance: " .. ui.formatNumber(balance), colors.black, colors.lime)
+    ui.drawCenteredText(monitor, 5, "Max: " .. ui.formatNumber(maxWithdraw), colors.black, colors.white)
     
-    ui.drawButton(monitor, 2, 9, 6, 1, "-1", colors.red, colors.white)
-    ui.drawButton(monitor, 9, 9, 6, 1, "-10", colors.red, colors.white)
-    ui.drawButton(monitor, 16, 9, 6, 1, "MAX", colors.orange, colors.white)
+    -- LARGE selected amount in center
+    monitor.setCursorPos(1, 7)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.orange)
+    local amtText = tostring(selectedAmount)
+    local amtX = math.floor((w - #amtText) / 2)
+    monitor.setCursorPos(amtX, 7)
+    monitor.write(amtText)
+    
+    -- Amount buttons (bigger and centered)
+    local btnW = 7
+    local startX = math.floor((w - (btnW * 3 + 2)) / 2)
+    
+    ui.drawButton(monitor, startX, h - 11, btnW, 2, "+1", colors.green, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, h - 11, btnW, 2, "+10", colors.green, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, h - 11, btnW, 2, "+64", colors.green, colors.white)
+    
+    ui.drawButton(monitor, startX, h - 8, btnW, 2, "-1", colors.red, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, h - 8, btnW, 2, "-10", colors.red, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, h - 8, btnW, 2, "MAX", colors.orange, colors.white)
     
     -- Action buttons
-    ui.drawButton(monitor, 3, h - 3, 8, 2, "CONFIRM", colors.blue, colors.white)
-    ui.drawButton(monitor, 13, h - 3, 8, 2, "CANCEL", colors.gray, colors.white)
+    local btnW2 = 10
+    local spacing = 2
+    local totalW = (btnW2 * 2) + spacing
+    local startX2 = math.floor((w - totalW) / 2)
+    
+    ui.drawButton(monitor, startX2, h - 3, btnW2, 3, "CONFIRM", colors.blue, colors.white)
+    ui.drawButton(monitor, startX2 + btnW2 + spacing, h - 3, btnW2, 3, "CANCEL", colors.gray, colors.white)
 end
 
 -- Get player username
@@ -133,18 +204,11 @@ local function countPlayerDiamonds(inventoryManager)
     return diamondCount, diamondSlots
 end
 
--- Count diamonds in chest
-local function countChestDiamonds(inventoryManager)
-    local list = inventoryManager.list()
-    local availableDiamonds = 0
-    
-    for slot, item in pairs(list) do
-        if item.name == "minecraft:diamond" then
-            availableDiamonds = availableDiamonds + item.count
-        end
-    end
-    
-    return availableDiamonds
+-- Check how many diamonds player can receive based on inventory space
+local function getMaxWithdrawAmount(inventoryManager, balance)
+    local emptySlots = inventoryManager.getEmptySpace()
+    local maxByInventory = emptySlots * 64  -- Max 64 diamonds per slot
+    return math.min(balance, maxByInventory)
 end
 
 -- Deposit diamonds
@@ -166,21 +230,27 @@ local function deposit(inventoryManager, monitor, username, balance)
         
         local event, side, x, y = os.pullEvent("monitor_touch")
         local w, h = monitor.getSize()
+        local btnW = 7
+        local startX = math.floor((w - (btnW * 3 + 2)) / 2)
+        local btnW2 = 10
+        local spacing = 2
+        local totalW = (btnW2 * 2) + spacing
+        local startX2 = math.floor((w - totalW) / 2)
         
         -- Amount adjustment
-        if ui.inBounds(x, y, 2, 7, 6, 1) then
+        if ui.inBounds(x, y, startX, h - 11, btnW, 2) then
             selectedAmount = math.min(selectedAmount + 1, availableDiamonds)
-        elseif ui.inBounds(x, y, 9, 7, 6, 1) then
+        elseif ui.inBounds(x, y, startX + btnW + 1, h - 11, btnW, 2) then
             selectedAmount = math.min(selectedAmount + 10, availableDiamonds)
-        elseif ui.inBounds(x, y, 16, 7, 6, 1) then
+        elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, h - 11, btnW, 2) then
             selectedAmount = math.min(selectedAmount + 64, availableDiamonds)
-        elseif ui.inBounds(x, y, 2, 9, 6, 1) then
+        elseif ui.inBounds(x, y, startX, h - 8, btnW, 2) then
             selectedAmount = math.max(selectedAmount - 1, 1)
-        elseif ui.inBounds(x, y, 9, 9, 6, 1) then
+        elseif ui.inBounds(x, y, startX + btnW + 1, h - 8, btnW, 2) then
             selectedAmount = math.max(selectedAmount - 10, 1)
-        elseif ui.inBounds(x, y, 16, 9, 6, 1) then
+        elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, h - 8, btnW, 2) then
             selectedAmount = availableDiamonds
-        elseif ui.inBounds(x, y, 3, h - 3, 8, 2) then
+        elseif ui.inBounds(x, y, startX2, h - 3, btnW2, 3) then
             -- Confirm
             local removed = 0
             local remaining = selectedAmount
@@ -216,7 +286,7 @@ local function deposit(inventoryManager, monitor, username, balance)
             end
             
             return balance
-        elseif ui.inBounds(x, y, 13, h - 3, 8, 2) then
+        elseif ui.inBounds(x, y, startX2 + btnW2 + spacing, h - 3, btnW2, 3) then
             -- Cancel
             return balance
         end
@@ -233,14 +303,13 @@ local function withdraw(inventoryManager, monitor, username, balance)
         return balance
     end
     
-    local availableDiamonds = countChestDiamonds(inventoryManager)
-    local maxWithdraw = math.min(balance, availableDiamonds)
+    local maxWithdraw = getMaxWithdrawAmount(inventoryManager, balance)
     
     if maxWithdraw == 0 then
         monitor.setBackgroundColor(colors.black)
         monitor.clear()
-        ui.drawCenteredText(monitor, 6, "No diamonds available!", colors.black, colors.red)
-        ui.drawCenteredText(monitor, 7, "in cashier chest", colors.black, colors.red)
+        ui.drawCenteredText(monitor, 6, "Inventory full!", colors.black, colors.red)
+        ui.drawCenteredText(monitor, 7, "Free up some space", colors.black, colors.red)
         sleep(2)
         return balance
     end
@@ -252,21 +321,27 @@ local function withdraw(inventoryManager, monitor, username, balance)
         
         local event, side, x, y = os.pullEvent("monitor_touch")
         local w, h = monitor.getSize()
+        local btnW = 7
+        local startX = math.floor((w - (btnW * 3 + 2)) / 2)
+        local btnW2 = 10
+        local spacing = 2
+        local totalW = (btnW2 * 2) + spacing
+        local startX2 = math.floor((w - totalW) / 2)
         
         -- Amount adjustment
-        if ui.inBounds(x, y, 2, 7, 6, 1) then
+        if ui.inBounds(x, y, startX, h - 11, btnW, 2) then
             selectedAmount = math.min(selectedAmount + 1, maxWithdraw)
-        elseif ui.inBounds(x, y, 9, 7, 6, 1) then
+        elseif ui.inBounds(x, y, startX + btnW + 1, h - 11, btnW, 2) then
             selectedAmount = math.min(selectedAmount + 10, maxWithdraw)
-        elseif ui.inBounds(x, y, 16, 7, 6, 1) then
+        elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, h - 11, btnW, 2) then
             selectedAmount = math.min(selectedAmount + 64, maxWithdraw)
-        elseif ui.inBounds(x, y, 2, 9, 6, 1) then
+        elseif ui.inBounds(x, y, startX, h - 8, btnW, 2) then
             selectedAmount = math.max(selectedAmount - 1, 1)
-        elseif ui.inBounds(x, y, 9, 9, 6, 1) then
+        elseif ui.inBounds(x, y, startX + btnW + 1, h - 8, btnW, 2) then
             selectedAmount = math.max(selectedAmount - 10, 1)
-        elseif ui.inBounds(x, y, 16, 9, 6, 1) then
+        elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, h - 8, btnW, 2) then
             selectedAmount = maxWithdraw
-        elseif ui.inBounds(x, y, 3, h - 3, 8, 2) then
+        elseif ui.inBounds(x, y, startX2, h - 3, btnW2, 3) then
             -- Confirm
             local added = inventoryManager.addItemToPlayer("back", {
                 name = "minecraft:diamond",
@@ -296,7 +371,7 @@ local function withdraw(inventoryManager, monitor, username, balance)
             end
             
             return balance
-        elseif ui.inBounds(x, y, 13, h - 3, 8, 2) then
+        elseif ui.inBounds(x, y, startX2 + btnW2 + spacing, h - 3, btnW2, 3) then
             -- Cancel
             return balance
         end
@@ -332,16 +407,18 @@ local function main()
         
         local event, side, x, y = os.pullEvent("monitor_touch")
         local w, h = monitor.getSize()
+        local btnW = 15
+        local startX = math.floor((w - btnW) / 2)
         
         if currentUsername then
             -- Player card inserted
-            if ui.inBounds(x, y, 3, 6, 19, 2) then
+            if ui.inBounds(x, y, startX, 8, btnW, 3) then
                 -- Deposit
                 currentBalance = deposit(inventoryManager, monitor, currentUsername, currentBalance)
-            elseif ui.inBounds(x, y, 3, 9, 19, 2) then
+            elseif ui.inBounds(x, y, startX, 12, btnW, 3) then
                 -- Withdraw
                 currentBalance = withdraw(inventoryManager, monitor, currentUsername, currentBalance)
-            elseif ui.inBounds(x, y, 3, h - 2, 19, 2) then
+            elseif ui.inBounds(x, y, startX, h - 3, btnW, 3) then
                 -- Return card
                 monitor.setBackgroundColor(colors.black)
                 monitor.clear()
@@ -359,14 +436,14 @@ local function main()
             end
         else
             -- No card inserted
-            if ui.inBounds(x, y, 3, 6, 19, 2) or ui.inBounds(x, y, 3, 9, 19, 2) then
+            if ui.inBounds(x, y, startX, 8, btnW, 3) or ui.inBounds(x, y, startX, 12, btnW, 3) then
                 -- Tried to deposit/withdraw without card
                 monitor.setBackgroundColor(colors.black)
                 monitor.clear()
                 ui.drawCenteredText(monitor, 6, "Please insert", colors.black, colors.red)
                 ui.drawCenteredText(monitor, 7, "player card first!", colors.black, colors.red)
                 sleep(2)
-            elseif ui.inBounds(x, y, 3, h - 2, 19, 2) then
+            elseif ui.inBounds(x, y, startX, h - 3, btnW, 3) then
                 -- Get new player card
                 local players = playerDetector.getPlayersInRange(5)
                 if #players > 0 then
