@@ -27,14 +27,13 @@ end
 
 -- Draw main menu
 local function drawMainMenu(monitor, username, balance)
-    monitor.setBackgroundColor(colors.black)
-    monitor.clear()
-    
-    local w, h = monitor.getSize()
-    
     if username then
-        -- Player has card inserted - normal view
+        -- Player has card inserted - normal view at scale 0.5
         monitor.setTextScale(0.5)
+        monitor.setBackgroundColor(colors.black)
+        monitor.clear()
+        
+        local w, h = monitor.getSize()
         
         -- Fancy title with spacing
         monitor.setCursorPos(1, 1)
@@ -60,37 +59,35 @@ local function drawMainMenu(monitor, username, balance)
         ui.drawButton(monitor, btnX, 10, btnW, 3, "WITHDRAW", colors.blue, colors.white)
         ui.drawButton(monitor, btnX, h - 5, btnW, 3, "RETURN CARD", colors.red, colors.white)
     else
-        -- No card - bigger text idle screen
-        -- Draw CASHIER with text scale 2
+        -- No card - bigger text idle screen at scale 2
         monitor.setTextScale(2)
         monitor.setBackgroundColor(colors.black)
         monitor.clear()
         
-        local w2, h2 = monitor.getSize()
+        local w, h = monitor.getSize()
         
         monitor.setTextColor(colors.orange)
         local title = "CASHIER"
-        local titleX = math.floor((w2 - #title) / 2)
+        local titleX = math.floor((w - #title) / 2)
         monitor.setCursorPos(titleX, 2)
         monitor.write(title)
         
         monitor.setTextColor(colors.yellow)
         local subtitle = "Insert Card"
-        local subX = math.floor((w2 - #subtitle) / 2)
+        local subX = math.floor((w - #subtitle) / 2)
         monitor.setCursorPos(subX, 4)
         monitor.write(subtitle)
         
-        -- Reset to normal scale for button
-        monitor.setTextScale(0.5)
-        local w, h = monitor.getSize()
-        local btnW = 17
+        -- Button also at scale 2
+        local btnW = 9
         local btnX = math.floor((w - btnW) / 2)
-        ui.drawButton(monitor, btnX, h - 5, btnW, 3, "GET CARD", colors.purple, colors.white)
+        ui.drawButton(monitor, btnX, h - 2, btnW, 2, "GET CARD", colors.purple, colors.white)
     end
 end
 
 -- Draw deposit UI
 local function drawDepositUI(monitor, availableDiamonds, selectedAmount, balance)
+    monitor.setTextScale(0.5)
     monitor.setBackgroundColor(colors.black)
     monitor.clear()
     
@@ -146,6 +143,7 @@ end
 
 -- Draw withdraw UI
 local function drawWithdrawUI(monitor, maxWithdraw, selectedAmount, balance)
+    monitor.setTextScale(0.5)
     monitor.setBackgroundColor(colors.black)
     monitor.clear()
     
