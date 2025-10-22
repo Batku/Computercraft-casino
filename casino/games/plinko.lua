@@ -204,6 +204,17 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
             monitor.write(ui.formatNumber(profit))
         end
     end
+    
+    -- Draw action buttons at bottom (CHANGE BET and DROP)
+    if not path or showResult then
+        local btnW = 10
+        local spacing = 2
+        local totalW = (btnW * 2) + spacing
+        local startX = math.floor((w - totalW) / 2)
+        
+        ui.drawButton(monitor, startX, h - 3, btnW, 3, "CHANGE BET", colors.orange, colors.white)
+        ui.drawButton(monitor, startX + btnW + spacing, h - 3, btnW, 3, "DROP", colors.blue, colors.white)
+    end
 end
 
 -- Draw betting UI
@@ -372,7 +383,7 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
                 currentBet = math.min(balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
             elseif ui.inBounds(x, y, dropX, h - 3, dropW, 3) then
-                -- Drop
+                -- Drop (set bet and go to gameplay)
                 betting = false
             elseif ui.inBounds(x, y, w - 10, h - 3, 9, 3) then
                 -- Quit
@@ -380,44 +391,64 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
             end
         end
         
-        -- Deduct bet from balance
-        balance = balance - currentBet
-        network.request("subtract_balance", {username = username, amount = currentBet})
-        
-        -- Drop ball
-        local slot, payout = animateDrop(monitor, speaker, currentBet, balance)
-        
-        local profit = payout - currentBet
-        if payout > 0 then
-            balance = balance + payout
-            network.request("add_balance", {username = username, amount = payout})
+        -- Now in gameplay mode - show board with CHANGE BET and DROP buttons
+        while true do
+            -- Show board with buttons
+            drawBoard(monitor, currentBet, balance, nil, nil, false, nil, nil, nil)
             
-            if profit > 0 then
-                sendNotification(chatBox, username, profit, true, balance)
-                playSound(speaker, "minecraft:entity.player.levelup", 1, 1)
-            elseif profit < 0 then
-                sendNotification(chatBox, username, math.abs(profit), false, balance)
-                playSound(speaker, "minecraft:entity.villager.no", 0.5, 0.8)
-            else
-                playSound(speaker, "minecraft:block.note_block.hat", 0.5, 1)
+            local event, side, x, y = os.pullEvent("monitor_touch")
+            local w, h = monitor.getSize()
+            local btnW = 10
+            local spacing = 2
+            local totalW = (btnW * 2) + spacing
+            local startX = math.floor((w - totalW) / 2)
+            
+            if ui.inBounds(x, y, startX, h - 3, btnW, 3) then
+                -- CHANGE BET - go back to betting screen
+                break
+            elseif ui.inBounds(x, y, startX + btnW + spacing, h - 3, btnW, 3) then
+                -- DROP - play the game
+                -- Deduct bet from balance
+                balance = balance - currentBet
+                network.request("subtract_balance", {username = username, amount = currentBet})
+                
+                -- Drop ball
+                local slot, payout = animateDrop(monitor, speaker, currentBet, balance)
+                
+                local profit = payout - currentBet
+                if payout > 0 then
+                    balance = balance + payout
+                    network.request("add_balance", {username = username, amount = payout})
+                    
+                    if profit > 0 then
+                        sendNotification(chatBox, username, profit, true, balance)
+                        playSound(speaker, "minecraft:entity.player.levelup", 1, 1)
+                    elseif profit < 0 then
+                        sendNotification(chatBox, username, math.abs(profit), false, balance)
+                        playSound(speaker, "minecraft:entity.villager.no", 0.5, 0.8)
+                    else
+                        playSound(speaker, "minecraft:block.note_block.hat", 0.5, 1)
+                    end
+                else
+                    sendNotification(chatBox, username, currentBet, false, balance)
+                    playSound(speaker, "minecraft:entity.villager.no", 0.5, 0.8)
+                end
+                
+                sleep(2)
+                
+                -- Check if player has enough balance
+                if balance < MIN_BET then
+                    monitor.setBackgroundColor(colors.black)
+                    monitor.clear()
+                    ui.drawCenteredText(monitor, 6, "Insufficient balance!", colors.black, colors.red)
+                    sleep(3)
+                    return balance
+                end
+                
+                currentBet = math.min(currentBet, balance, MAX_BET)
+                -- Stay in gameplay loop to allow multiple drops
             end
-        else
-            sendNotification(chatBox, username, currentBet, false, balance)
-            playSound(speaker, "minecraft:entity.villager.no", 0.5, 0.8)
         end
-        
-        sleep(3)
-        
-        -- Check if player has enough balance
-        if balance < MIN_BET then
-            monitor.setBackgroundColor(colors.black)
-            monitor.clear()
-            ui.drawCenteredText(monitor, 6, "Insufficient balance!", colors.black, colors.red)
-            sleep(3)
-            return balance
-        end
-        
-        currentBet = math.min(currentBet, balance, MAX_BET)
     end
 end
 
