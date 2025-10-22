@@ -288,7 +288,7 @@ local function animateDrop(monitor, speaker, bet, balance)
     -- Animate the drop
     for i, step in ipairs(path) do
         drawBoard(monitor, bet, balance, path, i, false, nil, nil, nil)
-        speaker.playSound("minecraft:block.note_block.harp", 0.4, 0.8 + (i * 0.05))
+        speaker.playSound("minecraft:block.note_block.bit", 0.4, 0.8 + (i * 0.05))
         sleep(0.1)
     end
     
