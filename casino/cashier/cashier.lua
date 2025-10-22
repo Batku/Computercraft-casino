@@ -428,116 +428,24 @@ local function main()
         -- Check for player card
         currentUsername = getPlayerUsername(inventoryManager)
         
-        local x, y  -- Declare here so it's accessible throughout the loop
-        
         if currentUsername then
             -- Get balance
             local success, data = network.request("get_balance", {username = currentUsername})
             if success then
                 currentBalance = data.balance
             end
-            
-            drawMainMenu(monitor, currentUsername, currentBalance)
-            
-            -- Make sure we're at the right scale for click detection
-            monitor.setTextScale(0.5)
-            
-            local event, side
-            event, side, x, y = os.pullEvent("monitor_touch")
-        else
-            -- No card - animate with rainbow effect
-            local rainbowColors = {colors.red, colors.orange, colors.yellow, colors.lime, colors.cyan, colors.lightBlue, colors.blue, colors.purple, colors.magenta, colors.pink}
-            local colorIndex = 1
-            
-            while true do
-                currentUsername = getPlayerUsername(inventoryManager)
-                if currentUsername then break end
-                
-                -- Draw with current rainbow color
-                monitor.setTextScale(2)
-                monitor.setBackgroundColor(colors.black)
-                monitor.clear()
-                
-                local w, h = monitor.getSize()
-                
-                monitor.setTextColor(rainbowColors[colorIndex])
-                local title = "CASHIER"
-                local titleX = math.floor((w - #title) / 2) + 1
-                monitor.setCursorPos(titleX, 2)
-                monitor.write(title)
-                
-                colorIndex = (colorIndex % #rainbowColors) + 1
-                monitor.setTextColor(rainbowColors[colorIndex])
-                local subtitle = "Insert Card"
-                local subX = math.floor((w - #subtitle) / 2) + 1
-                monitor.setCursorPos(subX, 4)
-                monitor.write(subtitle)
-                
-                -- Button
-                local btnW = 10
-                local btnX = math.floor((w - btnW) / 2) + 1
-                ui.drawButton(monitor, btnX, h - 2, btnW, 2, "GET CARD", colors.purple, colors.white)
-                
-                -- Wait for event or timeout
-                local event, side, x, y = os.pullEventRaw()
-                
-                if event == "monitor_touch" then
-                    -- Check if GET CARD button clicked
-                    if ui.inBounds(x, y, btnX, h - 2, btnW, 2) then
-                        -- Get new player card
-                        local players = playerDetector.getPlayersInRange(5)
-                        if #players > 0 then
-                            local username = players[1]
-                            
-                            -- Create account if doesn't exist
-                            network.request("create_account", {username = username})
-                            
-                            -- Give player card (assuming you have a dispenser)
-                            monitor.setTextScale(0.5)
-                            monitor.setBackgroundColor(colors.black)
-                            monitor.clear()
-                            ui.drawCenteredText(monitor, 5, "Creating card for", colors.black, colors.yellow)
-                            ui.drawCenteredText(monitor, 6, username, colors.black, colors.white)
-                            
-                            redstone.setOutput("right", true)
-                            sleep(0.5)
-                            redstone.setOutput("right", false)
-                            
-                            sleep(2)
-                        else
-                            monitor.setTextScale(0.5)
-                            monitor.setBackgroundColor(colors.black)
-                            monitor.clear()
-                            ui.drawCenteredText(monitor, 6, "No player detected!", colors.black, colors.red)
-                            ui.drawCenteredText(monitor, 7, "Stand closer (5 blocks)", colors.black, colors.orange)
-                            sleep(2)
-                        end
-                        break
-                    end
-                elseif event == "terminate" then
-                    error("Terminated")
-                end
-                
-                colorIndex = (colorIndex % #rainbowColors) + 1
-                sleep(0.3)
-            end
-            
-            -- Need to recheck username since we broke out of loop
-            currentUsername = getPlayerUsername(inventoryManager)
-            
-            -- If card was detected during animation, loop back to show menu
-            if currentUsername then
-                -- Continue to next iteration to show the menu
-            end
         end
         
-        if currentUsername and x then
+        drawMainMenu(monitor, currentUsername, currentBalance)
+        
+        local event, side, x, y = os.pullEvent("monitor_touch")
+        
+        if currentUsername then
             -- Card inserted - buttons at scale 0.5
             monitor.setTextScale(0.5)
             local w, h = monitor.getSize()
             local btnW = 17
             local startX = math.floor((w - btnW) / 2)
-            
             -- Player card inserted
             if ui.inBounds(x, y, startX, 6, btnW, 3) then
                 -- Deposit
@@ -560,6 +468,41 @@ local function main()
                 sleep(2)
                 currentUsername = nil
                 currentBalance = 0
+            end
+        else
+            -- No card inserted - button at scale 2
+            monitor.setTextScale(2)
+            local w, h = monitor.getSize()
+            local btnW = 10
+            local startX = math.floor((w - btnW) / 2) + 1
+            
+            if ui.inBounds(x, y, startX, h - 2, btnW, 2) then
+                -- Get new player card
+                local players = playerDetector.getPlayersInRange(5)
+                if #players > 0 then
+                    local username = players[1]
+                    
+                    -- Create account if doesn't exist
+                    network.request("create_account", {username = username})
+                    
+                    -- Give player card (assuming you have a dispenser)
+                    monitor.setBackgroundColor(colors.black)
+                    monitor.clear()
+                    ui.drawCenteredText(monitor, 5, "Creating card for", colors.black, colors.yellow)
+                    ui.drawCenteredText(monitor, 6, username, colors.black, colors.white)
+                    
+                    redstone.setOutput("right", true)
+                    sleep(0.5)
+                    redstone.setOutput("right", false)
+                    
+                    sleep(2)
+                else
+                    monitor.setBackgroundColor(colors.black)
+                    monitor.clear()
+                    ui.drawCenteredText(monitor, 6, "No player detected!", colors.black, colors.red)
+                    ui.drawCenteredText(monitor, 7, "Stand closer (5 blocks)", colors.black, colors.orange)
+                    sleep(2)
+                end
             end
         end
     end
