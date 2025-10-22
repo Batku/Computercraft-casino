@@ -152,8 +152,8 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
         monitor.setBackgroundColor(colors.black)
     end
     
-    -- Draw legend at bottom
-    local legendY = h - 2
+    -- Draw legend higher up to avoid button overlap
+    local legendY = h - 6
     monitor.setCursorPos(2, legendY)
     monitor.setBackgroundColor(colors.black)
     
@@ -188,18 +188,18 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
     monitor.write(".2")
     
     if showResult and slot and payout then
-        monitor.setCursorPos(2, h - 3)
+        monitor.setCursorPos(2, h - 5)
         monitor.setBackgroundColor(colors.black)
         monitor.setTextColor(colors.white)
         monitor.write("Slot " .. slot .. " = " .. multiplier .. "x")
         
         local profit = payout - bet
         if profit > 0 then
-            monitor.setCursorPos(w - #("+" .. ui.formatNumber(profit)) - 1, h - 3)
+            monitor.setCursorPos(w - #("+" .. ui.formatNumber(profit)) - 1, h - 5)
             monitor.setTextColor(colors.lime)
             monitor.write("+" .. ui.formatNumber(profit))
         elseif profit < 0 then
-            monitor.setCursorPos(w - #(ui.formatNumber(profit)) - 1, h - 3)
+            monitor.setCursorPos(w - #(ui.formatNumber(profit)) - 1, h - 5)
             monitor.setTextColor(colors.red)
             monitor.write(ui.formatNumber(profit))
         end
@@ -434,7 +434,21 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
                     playSound(speaker, "minecraft:entity.villager.no", 0.5, 0.8)
                 end
                 
-                sleep(2)
+                -- Show result and wait for DROP click to skip or timeout
+                local skipTimer = os.startTimer(2)
+                while true do
+                    local event, param1, param2, param3 = os.pullEvent()
+                    
+                    if event == "timer" and param1 == skipTimer then
+                        break  -- 2 second timeout
+                    elseif event == "monitor_touch" then
+                        -- Check if DROP button was clicked to skip
+                        if ui.inBounds(param2, param3, startX + btnW + spacing, h - 3, btnW, 3) then
+                            os.cancelTimer(skipTimer)
+                            break  -- Skip immediately
+                        end
+                    end
+                end
                 
                 -- Check if player has enough balance
                 if balance < MIN_BET then
