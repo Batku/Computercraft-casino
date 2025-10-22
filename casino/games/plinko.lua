@@ -110,17 +110,41 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
     monitor.setTextColor(colors.lime)
     monitor.write("Bal: " .. ui.formatNumber(balance))
     
-    -- Draw multiplier slots at bottom in correct positions (18 slots directly below pegs)
+    -- Draw multiplier slots at bottom - show actual values with proper spacing
     local slotY = h - 2
-    local pegStartX = math.floor((w - pegCols) / 2)
     
-    -- Draw each multiplier directly below its corresponding peg column
+    -- Build multiplier text strings
+    local multTexts = {}
     for i = 1, 18 do
         local mult = MULTIPLIERS[i]
-        -- Position multipliers directly below the peg columns
-        local x = pegStartX + (i - 1)
+        if mult >= 1000 then
+            multTexts[i] = "1K"
+        elseif mult >= 100 then
+            multTexts[i] = tostring(math.floor(mult))
+        elseif mult >= 10 then
+            multTexts[i] = tostring(math.floor(mult))
+        elseif mult >= 1 then
+            multTexts[i] = tostring(math.floor(mult))
+        else
+            multTexts[i] = ".2"
+        end
+    end
+    
+    -- Calculate total width needed and center
+    local totalWidth = 0
+    for i = 1, 18 do
+        totalWidth = totalWidth + #multTexts[i]
+    end
+    totalWidth = totalWidth + 17  -- Add spacing between multipliers
+    
+    local startX = math.floor((w - totalWidth) / 2)
+    local currentX = startX
+    
+    -- Draw each multiplier with spacing
+    for i = 1, 18 do
+        local mult = MULTIPLIERS[i]
         
-        monitor.setCursorPos(x, slotY)
+        monitor.setCursorPos(currentX, slotY)
         
         -- Color code by multiplier
         local color = colors.white
@@ -143,19 +167,10 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
             monitor.setTextColor(color)
         end
         
-        -- Format multiplier text (compact single character when possible)
-        if mult >= 1000 then
-            monitor.write("K")  -- K for 1000x
-        elseif mult >= 100 then
-            monitor.write(string.format("%d", math.floor(mult / 10)))  -- Show as tens (e.g., 13 for 130)
-        elseif mult >= 10 then
-            monitor.write(string.format("%d", math.floor(mult)))
-        elseif mult >= 1 then
-            monitor.write(string.format("%d", math.floor(mult)))
-        else
-            monitor.write("0")  -- 0 for 0.2x
-        end
+        monitor.write(multTexts[i])
         monitor.setBackgroundColor(colors.black)
+        
+        currentX = currentX + #multTexts[i] + 1  -- Move to next position with spacing
     end
     
     if showResult and slot and payout then
