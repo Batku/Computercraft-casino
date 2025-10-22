@@ -272,7 +272,7 @@ local function deposit(inventoryManager, monitor, username, balance)
                 if remaining <= 0 then break end
                 
                 local toRemove = math.min(remaining, slot.count)
-                local count = inventoryManager.removeItemFromPlayer("back", {
+                local count = inventoryManager.removeItemFromPlayer("up", {
                     name = "minecraft:diamond",
                     fromSlot = slot.slot,
                     count = toRemove
@@ -362,7 +362,7 @@ local function withdraw(inventoryManager, monitor, username, balance)
             -- Add diamonds in batches of 64 (max stack size)
             while amountToAdd > 0 do
                 local batchSize = math.min(64, amountToAdd)
-                local added = inventoryManager.addItemToPlayer("back", {
+                local added = inventoryManager.addItemToPlayer("up", {
                     name = "minecraft:diamond",
                     count = batchSize
                 })
