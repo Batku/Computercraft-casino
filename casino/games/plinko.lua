@@ -64,8 +64,14 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
     
     local w, h = monitor.getSize()
     
-    -- Title
-    ui.drawCenteredText(monitor, 1, "PLINKO", colors.black, colors.yellow)
+    -- Fancy title with spacing
+    monitor.setCursorPos(1, 1)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.orange)
+    local title = "P L I N K O"
+    local titleX = math.floor((w - #title) / 2)
+    monitor.setCursorPos(titleX, 1)
+    monitor.write(title)
     
     -- Bet on left
     monitor.setCursorPos(2, 2)
@@ -207,10 +213,20 @@ local function drawBettingUI(monitor, balance, currentBet)
     
     local w, h = monitor.getSize()
     
-    ui.drawCenteredText(monitor, 1, "PLINKO", colors.black, colors.yellow)
+    -- Fancy title
+    monitor.setCursorPos(1, 1)
+    monitor.setBackgroundColor(colors.black)
+    monitor.setTextColor(colors.orange)
+    local title = "P L I N K O"
+    local titleX = math.floor((w - #title) / 2)
+    monitor.setCursorPos(titleX, 1)
+    monitor.write(title)
     
-    -- Large centered bet display
-    ui.drawCenteredText(monitor, 4, "PLACE YOUR BET", colors.black, colors.white)
+    -- Decorative border
+    ui.drawCenteredText(monitor, 2, "-------------------", colors.black, colors.yellow)
+    
+    -- Large centered bet display with fancy styling
+    ui.drawCenteredText(monitor, 4, "~~ PLACE YOUR BET ~~", colors.black, colors.yellow)
     
     -- LARGE bet amount in center
     monitor.setCursorPos(1, 6)
@@ -418,8 +434,69 @@ local function main()
     print("Peripherals initialized")
     
     while true do
-        -- Show idle screen
-        ui.drawIdleScreen(monitor, "PLINKO")
+        -- Show fancy idle screen
+        monitor.setBackgroundColor(colors.black)
+        monitor.clear()
+        
+        local w, h = monitor.getSize()
+        
+        -- Fancy title with border
+        monitor.setCursorPos(1, 2)
+        monitor.setBackgroundColor(colors.black)
+        monitor.setTextColor(colors.yellow)
+        ui.drawCenteredText(monitor, 2, "========================", colors.black, colors.yellow)
+        
+        -- Big PLINKO title with colors
+        monitor.setCursorPos(1, 3)
+        monitor.setTextColor(colors.orange)
+        local title = "    P L I N K O    "
+        local titleX = math.floor((w - #title) / 2)
+        monitor.setCursorPos(titleX, 3)
+        monitor.write(title)
+        
+        monitor.setCursorPos(1, 4)
+        ui.drawCenteredText(monitor, 4, "========================", colors.black, colors.yellow)
+        
+        -- Decorative pegs
+        ui.drawCenteredText(monitor, 6, "o   o   o   o   o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 7, "  o   o   o   o  ", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 8, "o   o   O   o   o", colors.black, colors.yellow)
+        ui.drawCenteredText(monitor, 9, "  o   o   o   o  ", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 10, "o   o   o   o   o", colors.black, colors.gray)
+        
+        -- Multiplier legend preview
+        monitor.setCursorPos(2, 12)
+        monitor.setTextColor(colors.purple)
+        monitor.write("o")
+        monitor.setTextColor(colors.red)
+        monitor.write("o")
+        monitor.setTextColor(colors.orange)
+        monitor.write("o")
+        monitor.setTextColor(colors.yellow)
+        monitor.write("o")
+        monitor.setTextColor(colors.blue)
+        monitor.write("o")
+        monitor.setTextColor(colors.yellow)
+        monitor.write("o")
+        monitor.setTextColor(colors.orange)
+        monitor.write("o")
+        monitor.setTextColor(colors.red)
+        monitor.write("o")
+        monitor.setTextColor(colors.purple)
+        monitor.write("o")
+        
+        -- Bet info
+        ui.drawCenteredText(monitor, h - 5, "Min Bet: " .. MIN_BET .. " | Max: " .. MAX_BET, colors.black, colors.white)
+        
+        -- Animated prompt
+        local frame = math.floor(os.epoch("utc") / 500) % 2
+        if frame == 0 then
+            ui.drawCenteredText(monitor, h - 3, ">>> DROP CARD <<<", colors.black, colors.lime)
+        else
+            ui.drawCenteredText(monitor, h - 3, ">>> DROP CARD <<<", colors.black, colors.green)
+        end
+        
+        ui.drawCenteredText(monitor, h - 2, "to start playing!", colors.black, colors.white)
         
         -- Wait for player card
         while true do
@@ -428,6 +505,17 @@ local function main()
                 break
             end
             sleep(0.5)
+            
+            -- Redraw for animation
+            local newFrame = math.floor(os.epoch("utc") / 500) % 2
+            if newFrame ~= frame then
+                frame = newFrame
+                if frame == 0 then
+                    ui.drawCenteredText(monitor, h - 3, ">>> DROP CARD <<<", colors.black, colors.lime)
+                else
+                    ui.drawCenteredText(monitor, h - 3, ">>> DROP CARD <<<", colors.black, colors.green)
+                end
+            end
         end
         
         local username = inventoryManager.getOwner()
