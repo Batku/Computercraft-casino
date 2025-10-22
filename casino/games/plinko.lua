@@ -440,36 +440,40 @@ local function main()
         
         local w, h = monitor.getSize()
         
-        -- Fancy title with border
-        monitor.setCursorPos(1, 2)
-        monitor.setBackgroundColor(colors.black)
-        monitor.setTextColor(colors.yellow)
-        ui.drawCenteredText(monitor, 2, "========================", colors.black, colors.yellow)
+        -- Fancy title with border at very top
+        ui.drawCenteredText(monitor, 1, "========================", colors.black, colors.yellow)
         
         -- Big PLINKO title with colors
-        monitor.setCursorPos(1, 3)
+        monitor.setCursorPos(1, 2)
         monitor.setTextColor(colors.orange)
         local title = "    P L I N K O    "
         local titleX = math.floor((w - #title) / 2)
-        monitor.setCursorPos(titleX, 3)
+        monitor.setCursorPos(titleX, 2)
         monitor.write(title)
         
-        monitor.setCursorPos(1, 4)
-        ui.drawCenteredText(monitor, 4, "========================", colors.black, colors.yellow)
+        ui.drawCenteredText(monitor, 3, "========================", colors.black, colors.yellow)
         
-        -- BIG Decorative pegs filling the screen
-        ui.drawCenteredText(monitor, 5, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, 6, " o o o o o o o o o o o ", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, 7, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, 8, " o o o o o o o o o o o ", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, 9, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, 10, " o o o o o o o o o o o ", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, 11, "o o o o o O o o o o o o", colors.black, colors.yellow)
-        ui.drawCenteredText(monitor, 12, " o o o o o o o o o o o ", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, 13, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, 14, " o o o o o o o o o o o ", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, 15, "o o o o o o o o o o o o", colors.black, colors.gray)
-        ui.drawCenteredText(monitor, 16, " o o o o o o o o o o o ", colors.black, colors.gray)
+        -- HUGE Decorative pegs filling almost the entire screen
+        ui.drawCenteredText(monitor, 4, "o o o o o o o o o o o o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 5, " o o o o o o o o o o o ", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 6, "o o o o o o o o o o o o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 7, " o o o o o o o o o o o ", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 8, "o o o o o o o o o o o o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 9, " o o o o o o o o o o o ", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 10, "o o o o o o o o o o o o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 11, " o o o o o o o o o o o ", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 12, "o o o o o o o o o o o o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 13, " o o o o o o o o o o o ", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 14, "o o o o o o o o o o o o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 15, " o o o o o O o o o o o ", colors.black, colors.yellow)
+        ui.drawCenteredText(monitor, 16, "o o o o o o o o o o o o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 17, " o o o o o o o o o o o ", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 18, "o o o o o o o o o o o o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 19, " o o o o o o o o o o o ", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 20, "o o o o o o o o o o o o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 21, " o o o o o o o o o o o ", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 22, "o o o o o o o o o o o o", colors.black, colors.gray)
+        ui.drawCenteredText(monitor, 23, " o o o o o o o o o o o ", colors.black, colors.gray)
         
         -- Bet info
         ui.drawCenteredText(monitor, h - 5, "Min Bet: " .. MIN_BET .. " | Max: " .. MAX_BET, colors.black, colors.white)
