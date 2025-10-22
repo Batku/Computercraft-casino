@@ -61,14 +61,14 @@ local function drawMainMenu(monitor, username, balance)
         ui.drawButton(monitor, btnX, h - 5, btnW, 3, "RETURN CARD", colors.red, colors.white)
     else
         -- No card - bigger text idle screen
-        monitor.setTextScale(0.5)
-        
-        monitor.setBackgroundColor(colors.black)
-        monitor.setTextColor(colors.orange)
-        
         -- Draw CASHIER with text scale 2
         monitor.setTextScale(2)
+        monitor.setBackgroundColor(colors.black)
+        monitor.clear()
+        
         local w2, h2 = monitor.getSize()
+        
+        monitor.setTextColor(colors.orange)
         local title = "CASHIER"
         local titleX = math.floor((w2 - #title) / 2)
         monitor.setCursorPos(titleX, 2)
@@ -82,6 +82,7 @@ local function drawMainMenu(monitor, username, balance)
         
         -- Reset to normal scale for button
         monitor.setTextScale(0.5)
+        local w, h = monitor.getSize()
         local btnW = 17
         local btnX = math.floor((w - btnW) / 2)
         ui.drawButton(monitor, btnX, h - 5, btnW, 3, "GET CARD", colors.purple, colors.white)
