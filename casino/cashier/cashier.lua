@@ -428,6 +428,8 @@ local function main()
         -- Check for player card
         currentUsername = getPlayerUsername(inventoryManager)
         
+        local x, y  -- Declare here so it's accessible throughout the loop
+        
         if currentUsername then
             -- Get balance
             local success, data = network.request("get_balance", {username = currentUsername})
@@ -436,7 +438,8 @@ local function main()
             end
             
             drawMainMenu(monitor, currentUsername, currentBalance)
-            local event, side, x, y = os.pullEvent("monitor_touch")
+            local event, side
+            event, side, x, y = os.pullEvent("monitor_touch")
         else
             -- No card - animate with rainbow effect
             local rainbowColors = {colors.red, colors.orange, colors.yellow, colors.lime, colors.cyan, colors.lightBlue, colors.blue, colors.purple, colors.magenta, colors.pink}
