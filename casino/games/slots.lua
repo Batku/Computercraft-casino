@@ -663,6 +663,9 @@ local function main()
                 ui.drawCenteredText(monitor, 6, "Insufficient balance!", colors.black, colors.red)
                 ui.drawCenteredText(monitor, 7, "Visit cashier to deposit", colors.black, colors.white)
                 sleep(3)
+                redstone.setOutput("back", true)
+                sleep(0.5)
+                redstone.setOutput("back", false)
             else
                 -- Play game
                 local finalBalance = playGame(monitor, inventoryManager, speaker, chatBox, username, balance)
