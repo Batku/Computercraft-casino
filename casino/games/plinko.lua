@@ -74,38 +74,33 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
     monitor.write("Bet: " .. ui.formatNumber(bet))
     
     -- Draw board visualization - MUCH BIGGER, fills almost entire screen
-    local boardStartY = 2
-    local boardHeight = h - 5  -- Fill most of screen height, leave room for multipliers
-    local boardWidth = w - 2
-    local boardStartX = 1
+    local boardStartY = 3
+    local boardHeight = h - 6  -- Fill most of screen height, leave room for multipliers
+    local pegRows = 16
+    local pegCols = 18
     
-    if currentRow and currentRow > 0 then
-        -- Show ball dropping
-        local displayRow = math.floor((currentRow / ROWS) * boardHeight) + boardStartY
-        local displayPos = boardStartX + math.floor(((path[currentRow].position) / 17) * (boardWidth - 1))
+    -- Draw pegs in simple rectangular grid pattern
+    for row = 0, pegRows - 1 do
+        local rowY = boardStartY + row
+        for col = 0, pegCols - 1 do
+            local pegX = 3 + col
+            monitor.setCursorPos(pegX, rowY)
+            monitor.setBackgroundColor(colors.black)
+            monitor.setTextColor(colors.gray)
+            monitor.write(".")
+        end
+    end
+    
+    -- Draw ball on top of pegs if dropping
+    if currentRow and currentRow > 0 and path then
+        local displayRow = math.floor((currentRow / ROWS) * (pegRows - 1)) + boardStartY
+        local displayPos = 3 + math.floor(((path[currentRow].position) / 17) * (pegCols - 1))
         
-        -- Draw the ball (centered and visible)
         monitor.setCursorPos(displayPos, displayRow)
         monitor.setBackgroundColor(colors.yellow)
         monitor.setTextColor(colors.black)
         monitor.write("O")
         monitor.setBackgroundColor(colors.black)
-        
-        -- Draw pegs in simple grid pattern (clean and evenly spaced)
-        for row = 0, 15 do
-            local rowY = boardStartY + row
-            if rowY < boardStartY + boardHeight then
-                for col = 0, 17 do
-                    local pegX = boardStartX + 2 + col
-                    -- Don't draw peg where ball is
-                    if pegX ~= displayPos or rowY ~= displayRow then
-                        monitor.setCursorPos(pegX, rowY)
-                        monitor.setTextColor(colors.gray)
-                        monitor.write(".")
-                    end
-                end
-            end
-        end
     end
     
     -- Balance at bottom right during gameplay
