@@ -73,11 +73,11 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
     monitor.setTextColor(colors.lime)
     monitor.write("Bet: " .. ui.formatNumber(bet))
     
-    -- Draw board visualization in center (bigger and higher)
-    local boardStartY = 3
-    local boardHeight = 7
-    local boardWidth = 19
-    local boardStartX = math.floor((w - boardWidth) / 2)
+    -- Draw board visualization - MUCH BIGGER, fills almost entire screen
+    local boardStartY = 2
+    local boardHeight = h - 4  -- Fill most of screen height
+    local boardWidth = w - 2
+    local boardStartX = 1
     
     if currentRow and currentRow > 0 then
         -- Show ball dropping
@@ -91,12 +91,14 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
         monitor.write("O")
         monitor.setBackgroundColor(colors.black)
         
-        -- Draw pegs
-        for row = boardStartY, boardStartY + boardHeight - 1 do
-            for i = 0, 9 do
-                local pegX = boardStartX + i * 2
-                if pegX ~= displayPos or row ~= displayRow then
-                    monitor.setCursorPos(pegX, row)
+        -- Draw pegs in triangle pattern
+        for row = 0, boardHeight - 1 do
+            local pegsInRow = math.min(row + 3, 17)
+            local rowY = boardStartY + row
+            for i = 0, pegsInRow - 1 do
+                local pegX = boardStartX + math.floor((boardWidth - pegsInRow) / 2) + i
+                if pegX ~= displayPos or rowY ~= displayRow then
+                    monitor.setCursorPos(pegX, rowY)
                     monitor.setTextColor(colors.gray)
                     monitor.write(".")
                 end
@@ -110,18 +112,16 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
     monitor.setTextColor(colors.lime)
     monitor.write("Bal: " .. ui.formatNumber(balance))
     
-    -- Draw multiplier slots at bottom (centered and colorful)
-    local slotStartY = h - 3
+    -- Draw multiplier slots at bottom in correct positions (18 slots across bottom)
+    local slotY = h - 1
     
-    -- Draw slots in a visual grid (centered)
+    -- Draw each multiplier directly below its corresponding slot position
     for i = 1, 18 do
         local mult = MULTIPLIERS[i]
-        local col = ((i - 1) % 9)
-        local row = math.floor((i - 1) / 9)
-        local x = 3 + col * 2
-        local y = slotStartY + row
+        -- Position multipliers evenly across the width
+        local x = math.floor(2 + ((i - 1) * (w - 4) / 17))
         
-        monitor.setCursorPos(x, y)
+        monitor.setCursorPos(x, slotY)
         
         -- Color code by multiplier
         local color = colors.white
@@ -144,29 +144,32 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
             monitor.setTextColor(color)
         end
         
-        if mult >= 10 then
-            monitor.write(string.format("%3d", math.floor(mult)))
+        -- Format multiplier text
+        if mult >= 100 then
+            monitor.write(string.format("%dX", math.floor(mult)))
+        elseif mult >= 10 then
+            monitor.write(string.format("%dX", math.floor(mult)))
         elseif mult >= 1 then
-            monitor.write(string.format("%3.0f", mult))
+            monitor.write(string.format("%dX", math.floor(mult)))
         else
-            monitor.write(".2 ")
+            monitor.write(".2")
         end
         monitor.setBackgroundColor(colors.black)
     end
     
     if showResult and slot and payout then
-        monitor.setCursorPos(2, h - 1)
+        monitor.setCursorPos(2, h - 2)
         monitor.setBackgroundColor(colors.black)
         monitor.setTextColor(colors.white)
         monitor.write("Slot " .. slot .. " = " .. multiplier .. "x")
         
         local profit = payout - bet
         if profit > 0 then
-            monitor.setCursorPos(w - #("+" .. ui.formatNumber(profit)) - 1, h - 1)
+            monitor.setCursorPos(w - #("+" .. ui.formatNumber(profit)) - 1, h - 2)
             monitor.setTextColor(colors.lime)
             monitor.write("+" .. ui.formatNumber(profit))
         elseif profit < 0 then
-            monitor.setCursorPos(w - #(ui.formatNumber(profit)) - 1, h - 1)
+            monitor.setCursorPos(w - #(ui.formatNumber(profit)) - 1, h - 2)
             monitor.setTextColor(colors.red)
             monitor.write(ui.formatNumber(profit))
         end
@@ -182,27 +185,27 @@ local function drawBettingUI(monitor, balance, currentBet)
     
     ui.drawCenteredText(monitor, 1, "PLINKO", colors.black, colors.yellow)
     
-    ui.drawCenteredText(monitor, 3, "Place Your Bet", colors.black, colors.white)
+    ui.drawCenteredText(monitor, 2, "Place Your Bet", colors.black, colors.white)
     
     -- Big bet display (no gray background)
-    ui.drawCenteredText(monitor, 5, ui.formatNumber(currentBet), colors.black, colors.lime)
+    ui.drawCenteredText(monitor, 4, ui.formatNumber(currentBet), colors.black, colors.lime)
     
-    ui.drawCenteredText(monitor, 7, "Balance: " .. ui.formatNumber(balance), colors.black, colors.white)
-    ui.drawCenteredText(monitor, 8, "Min: " .. MIN_BET .. "  Max: " .. MAX_BET, colors.black, colors.gray)
+    ui.drawCenteredText(monitor, 5, "Balance: " .. ui.formatNumber(balance), colors.black, colors.white)
+    ui.drawCenteredText(monitor, 6, "Min: " .. MIN_BET .. "  Max: " .. MAX_BET, colors.black, colors.gray)
     
-    -- Bet buttons (bigger and centered, moved lower)
+    -- Bet buttons (bigger and centered, moved MUCH lower)
     local btnW = 7
     local startX = math.floor((w - (btnW * 3 + 2)) / 2)
     
-    ui.drawButton(monitor, startX, 10, btnW, 2, "+1", colors.green, colors.white)
-    ui.drawButton(monitor, startX + btnW + 1, 10, btnW, 2, "+5", colors.green, colors.white)
-    ui.drawButton(monitor, startX + (btnW + 1) * 2, 10, btnW, 2, "+10", colors.green, colors.white)
+    ui.drawButton(monitor, startX, h - 9, btnW, 2, "+1", colors.green, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, h - 9, btnW, 2, "+5", colors.green, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, h - 9, btnW, 2, "+10", colors.green, colors.white)
     
-    ui.drawButton(monitor, startX, 13, btnW, 2, "-1", colors.red, colors.white)
-    ui.drawButton(monitor, startX + btnW + 1, 13, btnW, 2, "-5", colors.red, colors.white)
-    ui.drawButton(monitor, startX + (btnW + 1) * 2, 13, btnW, 2, "-10", colors.red, colors.white)
+    ui.drawButton(monitor, startX, h - 6, btnW, 2, "-1", colors.red, colors.white)
+    ui.drawButton(monitor, startX + btnW + 1, h - 6, btnW, 2, "-5", colors.red, colors.white)
+    ui.drawButton(monitor, startX + (btnW + 1) * 2, h - 6, btnW, 2, "-10", colors.red, colors.white)
     
-    -- Action buttons
+    -- Action buttons at very bottom
     ui.drawButton(monitor, 2, h - 3, 9, 3, "DROP", colors.blue, colors.white)
     ui.drawButton(monitor, w - 10, h - 3, 9, 3, "QUIT", colors.gray, colors.white)
 end
@@ -285,22 +288,22 @@ local function playGame(monitor, inventoryManager, speaker, chatBox, username, b
             local startX = math.floor((w - (btnW * 3 + 2)) / 2)
             
             -- Bet adjustment buttons
-            if ui.inBounds(x, y, startX, 10, btnW, 2) then
+            if ui.inBounds(x, y, startX, h - 9, btnW, 2) then
                 currentBet = math.min(currentBet + 1, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, startX + btnW + 1, 10, btnW, 2) then
+            elseif ui.inBounds(x, y, startX + btnW + 1, h - 9, btnW, 2) then
                 currentBet = math.min(currentBet + 5, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, 10, btnW, 2) then
+            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, h - 9, btnW, 2) then
                 currentBet = math.min(currentBet + 10, balance, MAX_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, startX, 13, btnW, 2) then
+            elseif ui.inBounds(x, y, startX, h - 6, btnW, 2) then
                 currentBet = math.max(currentBet - 1, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, startX + btnW + 1, 13, btnW, 2) then
+            elseif ui.inBounds(x, y, startX + btnW + 1, h - 6, btnW, 2) then
                 currentBet = math.max(currentBet - 5, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
-            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, 13, btnW, 2) then
+            elseif ui.inBounds(x, y, startX + (btnW + 1) * 2, h - 6, btnW, 2) then
                 currentBet = math.max(currentBet - 10, MIN_BET)
                 drawBettingUI(monitor, balance, currentBet)
             elseif ui.inBounds(x, y, 2, h - 3, 9, 3) then
