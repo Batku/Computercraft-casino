@@ -110,68 +110,76 @@ local function drawBoard(monitor, bet, balance, path, currentRow, showResult, sl
     monitor.setTextColor(colors.lime)
     monitor.write("Bal: " .. ui.formatNumber(balance))
     
-    -- Draw multiplier slots at bottom - show actual values with proper spacing
-    local slotY = h - 2
+    -- Draw colored dots for each multiplier slot (directly below pegs)
+    local slotY = boardStartY + pegRows
     
-    -- Build multiplier text strings
-    local multTexts = {}
     for i = 1, 18 do
         local mult = MULTIPLIERS[i]
-        if mult >= 1000 then
-            multTexts[i] = "1K"
-        elseif mult >= 100 then
-            multTexts[i] = tostring(math.floor(mult))
-        elseif mult >= 10 then
-            multTexts[i] = tostring(math.floor(mult))
-        elseif mult >= 1 then
-            multTexts[i] = tostring(math.floor(mult))
-        else
-            multTexts[i] = ".2"
-        end
-    end
-    
-    -- Calculate total width needed and center
-    local totalWidth = 0
-    for i = 1, 18 do
-        totalWidth = totalWidth + #multTexts[i]
-    end
-    totalWidth = totalWidth + 17  -- Add spacing between multipliers
-    
-    local startX = math.floor((w - totalWidth) / 2)
-    local currentX = startX
-    
-    -- Draw each multiplier with spacing
-    for i = 1, 18 do
-        local mult = MULTIPLIERS[i]
+        local x = pegStartX + (i - 1)
         
-        monitor.setCursorPos(currentX, slotY)
+        monitor.setCursorPos(x, slotY)
         
         -- Color code by multiplier
         local color = colors.white
-        if mult >= 100 then
-            color = colors.red
+        if mult >= 1000 then
+            color = colors.purple  -- 1000x = purple
+        elseif mult >= 100 then
+            color = colors.red     -- 100x+ = red
         elseif mult >= 10 then
-            color = colors.orange
+            color = colors.orange  -- 10x+ = orange
         elseif mult >= 2 then
-            color = colors.yellow
+            color = colors.yellow  -- 2x+ = yellow
         else
-            color = colors.blue
+            color = colors.blue    -- 0.2x = blue
         end
         
-        -- Highlight winning slot
+        -- Highlight winning slot with bigger marker
         if showResult and slot == i then
             monitor.setBackgroundColor(color)
             monitor.setTextColor(colors.black)
+            monitor.write("O")
         else
             monitor.setBackgroundColor(colors.black)
             monitor.setTextColor(color)
+            monitor.write("o")
         end
-        
-        monitor.write(multTexts[i])
         monitor.setBackgroundColor(colors.black)
-        
-        currentX = currentX + #multTexts[i] + 1  -- Move to next position with spacing
     end
+    
+    -- Draw legend at bottom
+    local legendY = h - 2
+    monitor.setCursorPos(2, legendY)
+    monitor.setBackgroundColor(colors.black)
+    
+    -- Purple dot + 1000x
+    monitor.setTextColor(colors.purple)
+    monitor.write("o")
+    monitor.setTextColor(colors.white)
+    monitor.write("1K ")
+    
+    -- Red dot + 130x
+    monitor.setTextColor(colors.red)
+    monitor.write("o")
+    monitor.setTextColor(colors.white)
+    monitor.write("130 ")
+    
+    -- Orange dot + 26x
+    monitor.setTextColor(colors.orange)
+    monitor.write("o")
+    monitor.setTextColor(colors.white)
+    monitor.write("26 ")
+    
+    -- Yellow dot + 2x-9x
+    monitor.setTextColor(colors.yellow)
+    monitor.write("o")
+    monitor.setTextColor(colors.white)
+    monitor.write("2-9 ")
+    
+    -- Blue dot + 0.2x
+    monitor.setTextColor(colors.blue)
+    monitor.write("o")
+    monitor.setTextColor(colors.white)
+    monitor.write(".2")
     
     if showResult and slot and payout then
         monitor.setCursorPos(2, h - 3)
